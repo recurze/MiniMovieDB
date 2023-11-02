@@ -1,0 +1,5 @@
+cinemagoer
+fastapi
+pandas
+pymongo
+uvicorn

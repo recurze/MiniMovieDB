@@ -1,0 +1,34 @@
+https://www.mongodb.com/developer/products/mongodb/mongodb-schema-design-best-practices/
+
+* people
+    - name
+    - birth/death
+    - profession
+    - known for (ref shows)
+* shows
+    - basic
+        + title
+        + start/end
+        + runtime
+        + isAdult
+        + genres
+        + aka
+    - people
+        + directors
+        + writers
+        + actors
+    - reception
+        + ratings
+        + movielens_ratings
+        + #vote
+    - meta
+        + tags
+        + plot
+* users:
+    - watched:
+        + ref shows
+        + ratings
+    - behaviors:
+        + views
+        + clicks
+        + playbacks

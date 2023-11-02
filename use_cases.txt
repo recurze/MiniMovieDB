@@ -1,0 +1,9 @@
+Search:
+* Actors, Shows, Top rated/voted
+    - pymongo + fastapi/flask
+
+Explore:
+* Recommendations based on tags
+    - a simple system (how long to code?)
+* Fuzzy search tags/plot
+    - i.e., pipe output of the query to a fuzzy searcher
