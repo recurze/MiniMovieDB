@@ -1,10 +1,10 @@
 from imdb import Cinemagoer
-import os
 import json
-import sys
-import numpy as np
+import math
+import os
 import pandas as pd
 import pathlib
+import sys
 
 
 def read_csv(path, names):
@@ -18,20 +18,46 @@ def read_csv(path, names):
     )
 
 
+def dropna(d):
+    def isna(x):
+        if isinstance(d[k], float) and math.isnan(d[k]):
+            return True
+        if isinstance(d[k], str) and d[k] == "":
+            return True
+        if isinstance(d[k], list) and d[k] == []:
+            return True
+
+    rd = d.copy()
+    for k in d:
+        if isinstance(d[k], dict):
+            rd[k] = dropna(d[k])
+        elif isna(d[k]):
+            del rd[k]
+    return rd
+
+
 def people():
     infile = pathlib.PurePath("data", "imdb", "name.basics")
     df = read_csv(infile, ["id", "name", "birth", "death", "professions", "knownFor"])
 
-    df[["birth", "death"]] = df[["birth", "death"]].fillna(9999).astype(int)
-
     outfile = pathlib.PurePath("collections", "people.json")
-    df.to_json(outfile, orient="records")
+
+    with open(outfile, 'w') as f:
+        json.dump([dropna(record) for record in df.to_dict('records')], f, ensure_ascii=False)
 
 
 def shows():
     def load_actors():
         filepath = pathlib.PurePath("data", "imdb", "title.principals")
         df = read_csv(filepath, ["tid", "ordering", "pid", "category", "job", "character"])
+
+        def process_characters(s):
+            if isinstance(s, float) and math.isnan(s):
+                return ""
+            assert isinstance(s, str)
+            return [char.strip() for char in s[1:-1].replace('"', '').split(',')]
+
+        df["character"] = df["character"].apply(process_characters)
 
         # Needlessly gendered
         df["category"] = df.category.replace("actress", "actor")
@@ -51,14 +77,11 @@ def shows():
         df.drop(["ttype", "original"], axis=1, inplace=True)
 
         df.fillna({
-            "runtime": -1,
-            "start": 9999,
-            "isAdult": 0,
+            "isAdult": 2,
             "genres": "",
         }, inplace=True)
 
-        df["end"] = np.where(df.end.isna(), df.start, df.end)
-        df["isAdult"] = df["isAdult"].map({0: "no", 1: "yes"})
+        df["isAdult"] = df["isAdult"].map({0: "no", 1: "yes", 2: ""})
 
         return df
 
@@ -70,10 +93,11 @@ def shows():
     def get_people(tid):
         actors = df_actors[df_actors.tid == tid].sort_values("ordering")
         directors_writers = df_crew[df_crew.tid == tid].iloc[0]
+
         return {
             "directors": directors_writers.directors.split(',') if directors_writers.directors else [],
             "writers": directors_writers.writers.split(',') if directors_writers.writers else [],
-            "actors": [*zip(actors.pid, actors.character)],
+            "actors": [{"id": pid, "characters": character} for pid, character in zip(actors.pid, list(actors.character))],
         }
 
     def get_basics(tid):
@@ -81,9 +105,9 @@ def shows():
         akas = df_akas[df_akas.tid == tid].sort_values("ordering").title.tolist()
         return {
             "title": basic.title,
-            "start": int(basic.start),
-            "end": int(basic.end),
-            "runtime": int(basic.runtime),
+            "start": basic.start,
+            "end": basic.end,
+            "runtime": basic.runtime,
             "isAdult": basic.isAdult,
             "genres": basic.genres.split(',') if basic.genres else [],
             "aka": list(set(akas)),
@@ -104,13 +128,14 @@ def shows():
 
     outfile = pathlib.PurePath("collections", "shows.json")
     with open(outfile, 'w') as f:
-        json.dump({
-            tid: {
+        json.dump([
+            dropna({
+                "id": tid,
                 "basics": get_basics(tid),
                 "people": get_people(tid),
                 #"meta": get_meta(tid),
-            } for tid in tids
-        }, f, ensure_ascii=False)
+            }) for tid in tids
+        ], f, ensure_ascii=False)
 
 
 def prepare_collections(collections):
