@@ -103,14 +103,38 @@ def shows():
         df = read_csv(filepath, ["tid", "ordering", "title", "A", "B", "C", "D", "E"])
         return df[["tid", "ordering", "title"]]
 
+    def load_tags():
+        filepath = pathlib.PurePath("data", "ml-25m", "links.csv")
+        df_links = read_csv(filepath, delimiter=',')
+
+        filepath = pathlib.PurePath("data", "ml-25m", "genome-tags.csv")
+        df_tagnames = read_csv(filepath, delimiter=',')
+
+        filepath = pathlib.PurePath("data", "ml-25m", "genome-scores.csv")
+        df_tags = read_csv(filepath, delimiter=',')
+
+        df_tags = df_tags.join(df_tagnames.set_index("tagId"), on="tagId")
+        df_tags = df_tags.join(df_links.set_index("movieId"), on="movieId")
+        return df_tags.drop(["tagId", "movieId", "tmdbId"], axis=1)
+
     def get_people(tid):
         actors = df_actors[df_actors.tid == tid].sort_values("ordering")
-        directors_writers = df_crew[df_crew.tid == tid].iloc[0]
+        character_list = [
+            {"id": pid, "characters": character}
+            for pid, character in zip(actors.pid, list(actors.character))
+        ]
 
+        query = df_crew[df_crew.tid == tid]
+        if len(query) == 0:
+            return {
+                "actors": character_list,
+            }
+
+        directors_writers = query.iloc[0]
         return {
             "directors": directors_writers.directors.split(',') if directors_writers.directors else [],
             "writers": directors_writers.writers.split(',') if directors_writers.writers else [],
-            "actors": [{"id": pid, "characters": character} for pid, character in zip(actors.pid, list(actors.character))],
+            "actors": character_list,
         }
 
     def get_basics(tid):
@@ -127,17 +151,30 @@ def shows():
         }
 
     def get_ratings(tid):
-        rating = df_ratings[df_ratings.tid == tid].iloc[0]
+        query = df_ratings[df_ratings.tid == tid]
+        if len(query) == 0:
+            return {}
+
+        rating = query.iloc[0]
         return {
-            "rating": rating.averageRating,
-            "votes": rating.numVotes,
+            "rating": float(rating.averageRating),
+            "votes": int(rating.numVotes),
         }
 
     def get_meta(tid):
-        plot = cgo.get_movie(tid[2:], info=["plot"]).get("plot", " ")[0]
+        #plot = cgo.get_movie(tid[2:], info=["plot"]).get("plot", " ")[0]
+        query = df_tags[df_tags.imdbId == int(tid[2:])]
+        if len(query) == 0:
+            return {}
+
+        # 20 tags sufficient, there are like 1k total
+        tags = query.sort_values("relevance", ascending=False).head(20)
         return {
-            "tags": '',
-            "plot": plot,
+            "tags": [
+                {"tag": tag, "relevance": relevance}
+                for tag, relevance in zip(tags.tag, tags.relevance)
+            ],
+            #"plot": plot,
         }
 
     #cgo = Cinemagoer()
@@ -147,9 +184,9 @@ def shows():
     df_basics = load_basics()
     df_crew = load_crew()
     df_ratings = load_ratings()
+    df_tags = load_tags()
 
     tids = list(set(df_basics.tid))
-
     outfile = pathlib.PurePath("collections", "shows.json")
     with open(outfile, 'w') as f:
         json.dump([
@@ -158,7 +195,7 @@ def shows():
                 "basics": get_basics(tid),
                 "people": get_people(tid),
                 "rating": get_ratings(tid),
-                #"meta": get_meta(tid),
+                "meta": get_meta(tid),
             }) for tid in tids
         ], f, ensure_ascii=False, indent=4)
 
