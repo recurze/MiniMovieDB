@@ -160,7 +160,49 @@ def shows():
                 "rating": get_ratings(tid),
                 #"meta": get_meta(tid),
             }) for tid in tids
-        ], f, ensure_ascii=False)
+        ], f, ensure_ascii=False, indent=4)
+
+
+def users():
+    def load_ratings():
+        filepath = pathlib.PurePath("data", "ml-25m", "links")
+        df_links = read_csv(filepath, delimiter=',')
+
+        filepath = pathlib.PurePath("data", "ml-25m", "ratings")
+        df = read_csv(filepath, delimiter=',')
+
+        df = df.join(df_links.set_index("movieId"), on="movieId")
+        return df.drop(["tmdbId", "timestamp"], axis=1)
+
+    def get_ratings(uid):
+        def make_imdb_id(s):
+            if not isinstance(s, str):
+                if math.isnan(s):
+                    return ''
+                s = str(int(s))
+
+            return s if len(s) >= 7 else "tt" + '0'*(7 - len(s)) + s
+
+        return [
+            {
+                "movieId": d["movieId"],
+                "rating": d["rating"],
+                "imdbId": make_imdb_id(d["imdbId"]),
+            }
+            for d in df_ratings[df_ratings.userId == uid].to_dict("records")
+        ]
+
+    df_ratings = load_ratings()
+    uids = list(set(df_ratings.userId))
+
+    outfile = pathlib.PurePath("collections", "users.json")
+    with open(outfile, 'w') as f:
+        json.dump([
+            dropna({
+                "id": uid,
+                "ratings": get_ratings(uid),
+            }) for uid in uids
+        ], f, ensure_ascii=False, indent=4)
 
 
 def prepare_collections(collections):
@@ -174,6 +216,8 @@ def prepare_collections(collections):
             people()
         elif collection == "shows":
             shows()
+        elif collection == "users":
+            users()
         else:
             continue
 
