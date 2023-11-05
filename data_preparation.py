@@ -69,6 +69,10 @@ def shows():
         filepath = pathlib.PurePath("data", "imdb", "title.crew")
         return read_csv(filepath, ["tid", "directors", "writers"]).fillna("")
 
+    def load_ratings():
+        filepath = pathlib.PurePath("data", "imdb", "title.ratings")
+        return read_csv(filepath, ["tid", "averageRating", "numVotes"])
+
     def load_basics():
         filepath = pathlib.PurePath("data", "imdb", "title.basics")
         df = read_csv(filepath,
@@ -113,6 +117,13 @@ def shows():
             "aka": list(set(akas)),
         }
 
+    def get_ratings(tid):
+        rating = df_ratings[df_ratings.tid == tid].iloc[0]
+        return {
+            "rating": rating.averageRating,
+            "votes": rating.numVotes,
+        }
+
     def get_meta(tid):
         plot = cgo.get_movie(tid[2:], info=["plot"]).get("plot", " ")[0]
         return {
@@ -122,8 +133,12 @@ def shows():
 
     #cgo = Cinemagoer()
 
-    df_actors, df_crew = load_actors(), load_crew()
-    df_basics, df_akas = load_basics(), load_akas()
+    df_actors = load_actors()
+    df_akas = load_akas()
+    df_basics = load_basics()
+    df_crew = load_crew()
+    df_ratings = load_ratings()
+
     tids = list(set(df_basics.tid))
 
     outfile = pathlib.PurePath("collections", "shows.json")
@@ -133,6 +148,7 @@ def shows():
                 "id": tid,
                 "basics": get_basics(tid),
                 "people": get_people(tid),
+                "rating": get_ratings(tid),
                 #"meta": get_meta(tid),
             }) for tid in tids
         ], f, ensure_ascii=False)
