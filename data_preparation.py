@@ -7,10 +7,10 @@ import pathlib
 import sys
 
 
-def read_csv(path, names):
+def read_csv(path, names=None, delimiter='\t'):
     return pd.read_csv(
         path,
-        delimiter='\t',
+        delimiter=delimiter,
         quoting=3,
         na_values='\\N',
         header=0,
@@ -18,19 +18,28 @@ def read_csv(path, names):
     )
 
 
+def isna(x):
+    if isinstance(x, float) and math.isnan(x):
+        return True
+    if isinstance(x, str) and x == "":
+        return True
+    if isinstance(x, list) and x == []:
+        return True
+    if isinstance(x, dict) and x == {}:
+        return True
+    return False
+
+
 def dropna(d):
-    def isna(x):
-        if isinstance(d[k], float) and math.isnan(d[k]):
-            return True
-        if isinstance(d[k], str) and d[k] == "":
-            return True
-        if isinstance(d[k], list) and d[k] == []:
-            return True
+    if not isinstance(d, dict):
+        return d
 
     rd = d.copy()
     for k in d:
         if isinstance(d[k], dict):
             rd[k] = dropna(d[k])
+        elif isinstance(d[k], list):
+            rd[k] = [dropna(x) for x in d[k]]
         elif isna(d[k]):
             del rd[k]
     return rd
@@ -43,7 +52,7 @@ def people():
     outfile = pathlib.PurePath("collections", "people.json")
 
     with open(outfile, 'w') as f:
-        json.dump([dropna(record) for record in df.to_dict('records')], f, ensure_ascii=False)
+        json.dump([dropna(record) for record in df.to_dict("records")], f, ensure_ascii=False)
 
 
 def shows():
