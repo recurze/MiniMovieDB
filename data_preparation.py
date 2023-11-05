@@ -170,7 +170,7 @@ def prepare_collections(collections):
 
 
 if __name__ == "__main__":
-    known_collections = ["all", "episodes", "people", "shows", "users"]
+    known_collections = ["all", "people", "shows", "users"]
 
     if len(sys.argv) == 1:
         print(f"Usage: python {sys.argv[0]} <list of collections>")
