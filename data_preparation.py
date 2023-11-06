@@ -56,9 +56,9 @@ def people():
 
 
 def shows():
-    def load_actors():
+    def load_principals():
         filepath = pathlib.PurePath("data", "imdb", "title.principals")
-        df = read_csv(filepath, ["tid", "ordering", "pid", "category", "job", "character"])
+        df = read_csv(filepath, ["tid", "ordering", "pid", "category", "job", "characters"])
 
         def process_characters(s):
             if isinstance(s, float) and math.isnan(s):
@@ -66,13 +66,15 @@ def shows():
             assert isinstance(s, str)
             return [char.strip() for char in s[1:-1].replace('"', '').split(',')]
 
-        df["character"] = df["character"].apply(process_characters)
+        df["characters"] = df["characters"].apply(process_characters)
 
         # Needlessly gendered
         df["category"] = df.category.replace("actress", "actor")
 
-        # I'm sorry everyone else
-        return df[df.category == "actor"]
+        # drop directors and writers
+        df = df[df.category != "director"]
+        df = df[~((df.category == "writer") & ((df.job == "writer") | df.job.isna()))]
+        return df
 
     def load_crew():
         filepath = pathlib.PurePath("data", "imdb", "title.crew")
@@ -118,10 +120,23 @@ def shows():
         return df_tags.drop(["tagId", "movieId", "tmdbId"], axis=1)
 
     def get_people(tid):
-        actors = df_actors[df_actors.tid == tid].sort_values("ordering")
+        actors = df_principals[(df_principals.tid == tid) & (df_principals.category == "actor")].sort_values("ordering")
         character_list = [
-            {"id": pid, "characters": character}
-            for pid, character in zip(actors.pid, list(actors.character))
+            {
+                "id": d["pid"],
+                "characters": list(d["characters"]),
+            }
+            for d in actors.to_dict("records")
+        ]
+
+        misc_people = df_principals[(df_principals.tid == tid) & (df_principals.category != "actor")].sort_values("ordering")
+        job_list = [
+            {
+                "id": d["pid"],
+                "category": d["category"],
+                "job": d["job"] if d["job"] != d["category"] else "",
+            }
+            for d in misc_people.to_dict("records")
         ]
 
         query = df_crew[df_crew.tid == tid]
@@ -135,6 +150,7 @@ def shows():
             "directors": directors_writers.directors.split(',') if directors_writers.directors else [],
             "writers": directors_writers.writers.split(',') if directors_writers.writers else [],
             "actors": character_list,
+            "misc": job_list,
         }
 
     def get_basics(tid):
@@ -180,10 +196,10 @@ def shows():
 
     #cgo = Cinemagoer()
 
-    df_actors = load_actors()
     df_akas = load_akas()
     df_basics = load_basics()
     df_crew = load_crew()
+    df_principals = load_principals()
     df_ratings = load_ratings()
     df_tags = load_tags()
 
