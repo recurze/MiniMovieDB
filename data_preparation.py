@@ -87,7 +87,7 @@ def shows():
         df = read_csv(filepath,
                       ["tid", "ttype", "title", "original", "isAdult", "start", "end", "runtime", "genres"])
 
-        df.drop(["ttype", "original"], axis=1, inplace=True)
+        df.drop(["original"], axis=1, inplace=True)
 
         df.fillna({
             "isAdult": 2,
@@ -142,6 +142,7 @@ def shows():
         akas = df_akas[df_akas.tid == tid].sort_values("ordering").title.tolist()
         return {
             "title": basic.title,
+            "type": basic.ttype,
             "start": basic.start,
             "end": basic.end,
             "runtime": basic.runtime,
