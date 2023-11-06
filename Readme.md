@@ -23,3 +23,9 @@ Use `data_preparation.py` to convert tsv/csv into json for MongoDB import. See `
 
 
 ## `mongoimport`
+
+```
+for collection in people shows users; do
+    mongoimport --db "MiniMovieDB" --collection "$collection" --type json --file "collections/$collection.json" --jsonArray
+done
+```
