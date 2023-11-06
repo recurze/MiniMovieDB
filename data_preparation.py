@@ -53,7 +53,10 @@ def people():
     outfile = pathlib.PurePath("collections", "people.json")
 
     with open(outfile, 'w') as f:
-        json.dump([dropna(record) for record in df.to_dict("records")], f, ensure_ascii=False)
+        json.dump([
+            dropna(record)
+            for record in df.to_dict("records")
+        ], f, ensure_ascii=False, indent=4)
 
 
 def shows():
