@@ -1,3 +1,4 @@
+from datetime import datetime
 from imdb import Cinemagoer
 import json
 import math
@@ -226,7 +227,7 @@ def users():
         df = read_csv(filepath, delimiter=',')
 
         df = df.join(df_links.set_index("movieId"), on="movieId")
-        return df.drop(["tmdbId", "timestamp"], axis=1)
+        return df.drop(["tmdbId"], axis=1)
 
     def get_ratings(uid):
         def make_imdb_id(s):
@@ -242,6 +243,7 @@ def users():
                 "movieId": d["movieId"],
                 "rating": d["rating"],
                 "imdbId": make_imdb_id(d["imdbId"]),
+                "timestamp": datetime.fromtimestamp(d["timestamp"]).strftime('%Y-%m-%d'),
             }
             for d in df_ratings[df_ratings.userId == uid].to_dict("records")
         ]
