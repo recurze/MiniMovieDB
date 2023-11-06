@@ -1,5 +1,4 @@
 from datetime import datetime
-from imdb import Cinemagoer
 import json
 import math
 import os
@@ -73,6 +72,16 @@ def people():
 
 
 def shows():
+    def load_plots():
+        filepath = pathlib.PurePath("plots.csv")
+        plots = {}
+        with open(filepath, 'r') as f:
+
+            for line in f:
+                tid, plot = line.strip().split(',', 1)
+                plots[tid] = plot
+        return plots
+
     def load_principals():
         filepath = pathlib.PurePath("data", "imdb", "title.principals")
         df = read_csv(filepath, ["tid", "ordering", "pid", "category", "job", "characters"])
@@ -179,7 +188,6 @@ def shows():
         }
 
     def get_meta(tid):
-        #plot = cgo.get_movie(tid[2:], info=["plot"]).get("plot", " ")[0]
         query = df_tags[df_tags.imdbId == int(tid[2:])]
         if len(query) == 0:
             return {}
@@ -191,10 +199,10 @@ def shows():
                 {"tag": tag, "relevance": relevance}
                 for tag, relevance in zip(tags.tag, tags.relevance)
             ],
-            #"plot": plot,
+            "plot": plots.get(tid, ""),
         }
 
-    #cgo = Cinemagoer()
+    plots = load_plots()
 
     df_akas = load_akas()
     df_basics = load_basics()
