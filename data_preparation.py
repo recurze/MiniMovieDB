@@ -74,15 +74,7 @@ def shows():
 
         # Needlessly gendered
         df["category"] = df.category.replace("actress", "actor")
-
-        # drop directors and writers
-        df = df[df.category != "director"]
-        df = df[~((df.category == "writer") & ((df.job == "writer") | df.job.isna()))]
         return df
-
-    def load_crew():
-        filepath = pathlib.PurePath("data", "imdb", "title.crew")
-        return read_csv(filepath, ["tid", "directors", "writers"]).fillna("")
 
     def load_ratings():
         filepath = pathlib.PurePath("data", "imdb", "title.ratings")
@@ -133,28 +125,19 @@ def shows():
             for d in actors.to_dict("records")
         ]
 
-        misc_people = df_principals[(df_principals.tid == tid) & (df_principals.category != "actor")].sort_values("ordering")
+        crew = df_principals[(df_principals.tid == tid) & (df_principals.category != "actor")].sort_values("ordering")
         job_list = [
             {
                 "id": d["pid"],
                 "category": d["category"],
                 "job": d["job"] if d["job"] != d["category"] else "",
             }
-            for d in misc_people.to_dict("records")
+            for d in crew.to_dict("records")
         ]
 
-        query = df_crew[df_crew.tid == tid]
-        if len(query) == 0:
-            return {
-                "actors": character_list,
-            }
-
-        directors_writers = query.iloc[0]
         return {
-            "directors": directors_writers.directors.split(',') if directors_writers.directors else [],
-            "writers": directors_writers.writers.split(',') if directors_writers.writers else [],
             "actors": character_list,
-            "misc": job_list,
+            "crew": job_list,
         }
 
     def get_basics(tid):
@@ -202,7 +185,6 @@ def shows():
 
     df_akas = load_akas()
     df_basics = load_basics()
-    df_crew = load_crew()
     df_principals = load_principals()
     df_ratings = load_ratings()
     df_tags = load_tags()
