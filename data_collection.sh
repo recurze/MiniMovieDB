@@ -21,16 +21,6 @@ extract_movielens(){
     unzip ml-25m.zip
 }
 
-dl_moviegenres(){
-    wget https://github.com/davidsbatista/text-classification/blob/master/movies_genres.csv.bz2
-}
-
-extract_moviegenres(){
-    mkdir -p misc
-    bzip2 -d movies_genres.csv.bz2
-    mv movies_genres.csv misc
-}
-
 mkdir -p data
 pushd data
 
@@ -40,6 +30,4 @@ extract_imdb
 dl_movielens
 extract_movielens
 
-dl_moviegenres
-extract_moviegenres
 popd

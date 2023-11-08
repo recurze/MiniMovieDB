@@ -19,7 +19,7 @@ def get_plot(tid):
 
 if __name__ == "__main__":
     plots = {}
-    num_votes_threshold = 10000  # rougly 14500 titles, 1.5h
+    num_votes_threshold = 2000  # rougly 50k titles
 
     filepath = pathlib.PurePath("data", "imdb", "title.ratings.tsv")
     df = pd.read_csv(filepath, delimiter='\t')

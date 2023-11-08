@@ -73,7 +73,7 @@ def people():
 
 def shows():
     def load_plots():
-        filepath = pathlib.PurePath("plots.csv")
+        filepath = pathlib.PurePath("data", "misc", "plots.csv")
         plots = {}
         with open(filepath, 'r') as f:
 
