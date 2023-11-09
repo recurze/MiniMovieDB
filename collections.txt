@@ -28,7 +28,9 @@ https://www.mongodb.com/developer/products/mongodb/mongodb-schema-design-best-pr
     - watched:
         + ref shows
         + ratings
-    - behaviors:
-        + views
-        + clicks
-        + playbacks
+    - events:
+        + session id
+        + event type
+        + timestamp
+        + timestamp_end (for type = playback only)
+        + rating (for type = rating only)

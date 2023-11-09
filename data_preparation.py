@@ -11,7 +11,7 @@ def get_oid(s):
     if not isinstance(s, str):
         s = str(s)
     hex = s.encode('utf-8').hex()
-    return {"$oid": '0'*(24 - len(hex)) + hex}
+    return {"$oid": '0'*(24 - len(hex)) + hex if hex else ""}
 
 
 def read_csv(path, names=None, delimiter='\t'):
@@ -235,26 +235,53 @@ def users():
         df = df.join(df_links.set_index("movieId"), on="movieId")
         return df.drop(["tmdbId"], axis=1)
 
+    def load_events():
+        filepath = pathlib.PurePath("data", "misc", "user_events.csv")
+        df_events = pd.read_csv(filepath, delimiter=',', quotechar='"')
+        df_events.drop(["tag"], axis=1, inplace=True)
+        return df_events
+
+    def make_imdb_id(s):
+        if not isinstance(s, str):
+            if math.isnan(s):
+                return ''
+            s = str(int(s))
+        return s if len(s) >= 7 else "tt" + '0'*(7 - len(s)) + s
+
+    def make_timestamp(t):
+        if math.isnan(t):
+            return ""
+        return datetime.fromtimestamp(t).strftime('%Y%m%d %H:%M:%S')
+
     def get_ratings(uid):
-        def make_imdb_id(s):
-            if not isinstance(s, str):
-                if math.isnan(s):
-                    return ''
-                s = str(int(s))
-
-            return s if len(s) >= 7 else "tt" + '0'*(7 - len(s)) + s
-
         return [
             {
                 "movieId": d["movieId"],
                 "rating": d["rating"],
                 "imdbId": get_oid(make_imdb_id(d["imdbId"])),
-                "timestamp": datetime.fromtimestamp(d["timestamp"]).strftime('%Y-%m-%d'),
+                "timestamp": make_timestamp(d["timestamp"]),
             }
             for d in df_ratings[df_ratings.userId == uid].to_dict("records")
         ]
 
+    def get_events(uid):
+        return [
+            {
+                "sessionId": d["sessionId"],
+                "eventType": d["eventType"].split('-')[1],
+                "imdbId": get_oid(make_imdb_id(d["imdbId"])),
+                "timestamp": make_timestamp(d["timestamp"]),
+                # Only available for eventType = playback
+                "timestamp_end": make_timestamp(d["playbackEndTimestamp"]),
+                # Only available for eventType = rate
+                "rating": d["rating"],
+            }
+            for d in df_events[df_events.userId == uid].sort_values("timestamp").to_dict("records")
+        ]
+
+
     df_ratings = load_ratings()
+    df_events = load_events()
     uids = list(set(df_ratings.userId))
 
     outfile = pathlib.PurePath("collections", "users.json")
@@ -263,6 +290,7 @@ def users():
             dropna({
                 "_id": get_oid(uid),
                 "ratings": get_ratings(uid),
+                "events": get_events(uid),
             }) for uid in uids
         ], f, ensure_ascii=False, indent=4)
 
