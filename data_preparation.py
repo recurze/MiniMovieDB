@@ -216,6 +216,7 @@ def shows():
         json.dump([
             dropna({
                 "_id": get_oid(tid),
+                "tid": tid,
                 "basics": get_basics(tid),
                 "people": get_people(tid),
                 "rating": get_ratings(tid),
