@@ -45,23 +45,32 @@ def dropna(d):
     return rd
 
 
+# https://stackoverflow.com/a/52137753: dumping large json arrays
+class IteratorAsList(list):
+    def __init__(self, iterator):
+        self.iterator = iterator
+
+    def __iter__(self):
+        return self.iterator
+
+    def __len__(self):
+        return 1
+
+
 def people():
-    infile = pathlib.PurePath("data", "imdb", "name.basics")
+    infile = pathlib.PurePath("data", "imdb", "name.basics.tsv")
     df = read_csv(infile, ["id", "name", "birth", "death", "professions", "knownFor"])
+
+    df.knownFor = df.knownFor.fillna("").map(lambda x: x.split(','))
+    df.professions = df.professions.fillna("").map(lambda x: x.split(','))
 
     outfile = pathlib.PurePath("collections", "people.json")
     with open(outfile, 'w') as f:
-        json.dump([
-            dropna({
-                "_id": record["id"],
-                "name": record["name"],
-                "birth": record["birth"],
-                "death": record["death"],
-                "professions": record["professions"],
-                "knownFor": record["knownFor"].split(','),
-            })
-            for record in df.to_dict("records")
-        ], f, ensure_ascii=False, indent=4)
+        json.dump(
+            IteratorAsList(dropna(record) for record in df.to_dict("records")),
+            f,
+            ensure_ascii=False
+        )
 
 
 def shows():
@@ -273,21 +282,25 @@ def users():
             for d in df_events[df_events.userId == uid].sort_values("timestamp").to_dict("records")
         ]
 
+    def user_dict(uid):
+        return {
+            "_id": uid,
+            "ratings": get_ratings(uid),
+            "events": get_events(uid),
+        }
 
     df_ratings = load_ratings()
     df_events = load_events()
+
     uids = list(set(df_ratings.userId))
 
     outfile = pathlib.PurePath("collections", "users.json")
     with open(outfile, 'w') as f:
-        json.dump([
-            dropna({
-                "_id": uid,
-                "ratings": get_ratings(uid),
-                "events": get_events(uid),
-            }) for uid in uids
-        ], f, ensure_ascii=False, indent=4)
-
+        json.dump(
+            IteratorAsList(user_dict(uid) for uid in uids),
+            f,
+            ensure_ascii=False,
+        )
 
 def prepare_collections(collections):
     os.makedirs("collections", exist_ok=True)
