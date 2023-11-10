@@ -2,35 +2,40 @@ https://www.mongodb.com/developer/products/mongodb/mongodb-schema-design-best-pr
 
 * people
     - name
-    - birth/death
+    - birth
+    - death
     - profession
-    - known for (ref shows)
+    - known for (list shows)
 * shows
-    - basic
-        + title
-        + start/end
-        + runtime
-        + isAdult
-        + genres
-        + aka
-    - people
-        + directors
-        + writers
-        + actors
-    - reception
-        + ratings
-        + movielens_ratings
-        + #vote
-    - meta
-        + tags
-        + plot
+    - title
+    - start
+    - end
+    - runtime
+    - isAdult
+    - genres (list str)
+    - aka (list str)
+
+    - plot
+    - tags (list str)
+
+    - actors (list)
+        + peopleId
+        + character list
+    - people (list)
+        + peopleId
+        + job
+
+    - ratings
+    - numVotes
 * users:
-    - watched:
-        + ref shows
-        + ratings
-    - events:
+    - username
+    - ratings (list):
+        + imdbId
+        + rating
+        + timestamp
+    - events (list):
         + session id
         + event type
         + timestamp
-        + timestamp_end (for type = playback only)
+        + playbackEndTimestamp (for type = playback only)
         + rating (for type = rating only)
