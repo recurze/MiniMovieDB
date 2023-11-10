@@ -5,7 +5,6 @@ import os
 import pandas as pd
 import pathlib
 import sys
-import time
 
 
 def get_oid(s):
@@ -53,44 +52,23 @@ def dropna(d):
     return rd
 
 
-# https://stackoverflow.com/a/52137753: dumping large json arrays
-class IteratorAsList(list):
-    def __init__(self, iterator):
-        self.iterator = iterator
-
-    def __iter__(self):
-        return self.iterator
-
-    def __len__(self):
-        return 1
-
-
 def people():
-    infile = pathlib.PurePath("data", "imdb", "name.basics.tsv")
+    infile = pathlib.PurePath("data", "imdb", "name.basics")
     df = read_csv(infile, ["id", "name", "birth", "death", "professions", "knownFor"])
-
-    def get_known_for(kf):
-        if isinstance(kf, str):
-            return kf.split(',')
-        return []
-
-    def people_dict(record):
-        return dropna({
-            "_id": get_oid(record["id"]),
-            "name": record["name"],
-            "birth": record["birth"],
-            "death": record["death"],
-            "professions": record["professions"],
-            "knownFor": [get_oid(id) for id in get_known_for(record["knownFor"])],
-        })
 
     outfile = pathlib.PurePath("collections", "people.json")
     with open(outfile, 'w') as f:
-        json.dump(
-            IteratorAsList(people_dict(record) for record in df.to_dict("records")),
-            f,
-            ensure_ascii=False,
-        )
+        json.dump([
+            dropna({
+                "_id": get_oid(record["id"]),
+                "name": record["name"],
+                "birth": record["birth"],
+                "death": record["death"],
+                "professions": record["professions"],
+                "knownFor": [get_oid(id) for id in record["knownFor"].split(',')],
+            })
+            for record in df.to_dict("records")
+        ], f, ensure_ascii=False, indent=4)
 
 
 def shows():
@@ -98,25 +76,34 @@ def shows():
         filepath = pathlib.PurePath("data", "misc", "plots.csv")
         plots = {}
         with open(filepath, 'r') as f:
+
             for line in f:
                 tid, plot = line.strip().split(',', 1)
                 plots[tid] = plot
         return plots
 
     def load_principals():
-        filepath = pathlib.PurePath("data", "imdb", "title.principals.tsv")
+        filepath = pathlib.PurePath("data", "imdb", "title.principals")
         df = read_csv(filepath, ["tid", "ordering", "pid", "category", "job", "characters"])
+
+        def process_characters(s):
+            if isinstance(s, float) and math.isnan(s):
+                return ""
+            assert isinstance(s, str)
+            return [char.strip() for char in s[1:-1].replace('"', '').split(',')]
+
+        df["characters"] = df["characters"].apply(process_characters)
 
         # Needlessly gendered
         df["category"] = df.category.replace("actress", "actor")
-        return df.sort_values("ordering")
+        return df
 
     def load_ratings():
-        filepath = pathlib.PurePath("data", "imdb", "title.ratings.tsv")
+        filepath = pathlib.PurePath("data", "imdb", "title.ratings")
         return read_csv(filepath, ["tid", "averageRating", "numVotes"])
 
     def load_basics():
-        filepath = pathlib.PurePath("data", "imdb", "title.basics.tsv")
+        filepath = pathlib.PurePath("data", "imdb", "title.basics")
         df = read_csv(filepath,
                       ["tid", "ttype", "title", "original", "isAdult", "start", "end", "runtime", "genres"])
 
@@ -132,9 +119,9 @@ def shows():
         return df
 
     def load_akas():
-        filepath = pathlib.PurePath("data", "imdb", "title.akas.tsv")
+        filepath = pathlib.PurePath("data", "imdb", "title.akas")
         df = read_csv(filepath, ["tid", "ordering", "title", "A", "B", "C", "D", "E"])
-        return df[["tid", "ordering", "title"]].sort_values("ordering")
+        return df[["tid", "ordering", "title"]]
 
     def load_tags():
         filepath = pathlib.PurePath("data", "ml-25m", "links.csv")
@@ -148,25 +135,19 @@ def shows():
 
         df_tags = df_tags.join(df_tagnames.set_index("tagId"), on="tagId")
         df_tags = df_tags.join(df_links.set_index("movieId"), on="movieId")
-        return df_tags.drop(["tagId", "movieId", "tmdbId"], axis=1).sort_values("relevance", ascending=False)
-
-    def process_characters(s):
-        if isinstance(s, float) and math.isnan(s):
-            return ""
-        assert isinstance(s, str)
-        return [char.strip() for char in s[1:-1].replace('"', '').split(',')]
+        return df_tags.drop(["tagId", "movieId", "tmdbId"], axis=1)
 
     def get_people(tid):
-        actors = df_principals[(df_principals.tid == tid) & (df_principals.category == "actor")]
+        actors = df_principals[(df_principals.tid == tid) & (df_principals.category == "actor")].sort_values("ordering")
         character_list = [
             {
                 "id": get_oid(d["pid"]),
-                "characters": process_characters(d["characters"]),
+                "characters": list(d["characters"]),
             }
             for d in actors.to_dict("records")
         ]
 
-        crew = df_principals[(df_principals.tid == tid) & (df_principals.category != "actor")]
+        crew = df_principals[(df_principals.tid == tid) & (df_principals.category != "actor")].sort_values("ordering")
         job_list = [
             {
                 "id": get_oid(d["pid"]),
@@ -183,7 +164,7 @@ def shows():
 
     def get_basics(tid):
         basic = df_basics[df_basics.tid == tid].iloc[0]
-        akas = df_akas[df_akas.tid == tid].title.tolist()
+        akas = df_akas[df_akas.tid == tid].sort_values("ordering").title.tolist()
         return {
             "title": basic.title,
             "type": basic.ttype,
@@ -212,7 +193,7 @@ def shows():
             return {}
 
         # 20 tags sufficient, there are like 1k total
-        tags = query.head(20)
+        tags = query.sort_values("relevance", ascending=False).head(20)
         return {
             "tags": [
                 {"tag": tag, "relevance": relevance}
@@ -220,16 +201,6 @@ def shows():
             ],
             "plot": plots.get(tid, ""),
         }
-
-    def show_dict(tid):
-        return dropna({
-            "_id": get_oid(tid),
-            "tid": tid,
-            "basics": get_basics(tid),
-            "people": get_people(tid),
-            "rating": get_ratings(tid),
-            "meta": get_meta(tid),
-        })
 
     plots = load_plots()
 
@@ -242,19 +213,24 @@ def shows():
     tids = list(set(df_basics.tid))
     outfile = pathlib.PurePath("collections", "shows.json")
     with open(outfile, 'w') as f:
-        json.dump(
-            IteratorAsList(show_dict(tid) for tid in tids),
-            f,
-            ensure_ascii=False,
-        )
+        json.dump([
+            dropna({
+                "_id": get_oid(tid),
+                "tid": tid,
+                "basics": get_basics(tid),
+                "people": get_people(tid),
+                "rating": get_ratings(tid),
+                "meta": get_meta(tid),
+            }) for tid in tids
+        ], f, ensure_ascii=False, indent=4)
 
 
 def users():
     def load_ratings():
-        filepath = pathlib.PurePath("data", "ml-25m", "links.csv")
+        filepath = pathlib.PurePath("data", "ml-25m", "links")
         df_links = read_csv(filepath, delimiter=',')
 
-        filepath = pathlib.PurePath("data", "ml-25m", "ratings.csv")
+        filepath = pathlib.PurePath("data", "ml-25m", "ratings")
         df = read_csv(filepath, delimiter=',')
 
         df = df.join(df_links.set_index("movieId"), on="movieId")
@@ -304,24 +280,20 @@ def users():
             for d in df_events[df_events.userId == uid].sort_values("timestamp").to_dict("records")
         ]
 
-    def user_dict(uid):
-        return dropna({
-            "_id": get_oid(uid),
-            "ratings": get_ratings(uid),
-            "events": get_events(uid),
-        })
 
     df_ratings = load_ratings()
     df_events = load_events()
-
     uids = list(set(df_ratings.userId))
+
     outfile = pathlib.PurePath("collections", "users.json")
     with open(outfile, 'w') as f:
-        json.dump(
-            IteratorAsList(user_dict(uid) for uid in uids),
-            f,
-            ensure_ascii=False,
-        )
+        json.dump([
+            dropna({
+                "_id": get_oid(uid),
+                "ratings": get_ratings(uid),
+                "events": get_events(uid),
+            }) for uid in uids
+        ], f, ensure_ascii=False, indent=4)
 
 
 def prepare_collections(collections):
@@ -331,8 +303,6 @@ def prepare_collections(collections):
         collections = known_collections[1:]
 
     for collection in collections:
-        start = time.time()
-        print(f"Preparing {collection}")
         if collection == "people":
             people()
         elif collection == "shows":
@@ -341,7 +311,6 @@ def prepare_collections(collections):
             users()
         else:
             continue
-        print(f"Time taken: {time.time() - start}")
 
 
 if __name__ == "__main__":
