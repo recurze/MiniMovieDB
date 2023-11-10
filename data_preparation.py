@@ -7,13 +7,6 @@ import pathlib
 import sys
 
 
-def get_oid(s):
-    if not isinstance(s, str):
-        s = str(s)
-    hex = s.encode('utf-8').hex()
-    return {"$oid": '0'*(24 - len(hex)) + hex if hex else ""}
-
-
 def read_csv(path, names=None, delimiter='\t'):
     return pd.read_csv(
         path,
@@ -60,12 +53,12 @@ def people():
     with open(outfile, 'w') as f:
         json.dump([
             dropna({
-                "_id": get_oid(record["id"]),
+                "_id": record["id"],
                 "name": record["name"],
                 "birth": record["birth"],
                 "death": record["death"],
                 "professions": record["professions"],
-                "knownFor": [get_oid(id) for id in record["knownFor"].split(',')],
+                "knownFor": record["knownFor"].split(','),
             })
             for record in df.to_dict("records")
         ], f, ensure_ascii=False, indent=4)
@@ -141,7 +134,7 @@ def shows():
         actors = df_principals[(df_principals.tid == tid) & (df_principals.category == "actor")].sort_values("ordering")
         character_list = [
             {
-                "id": get_oid(d["pid"]),
+                "id": d["pid"],
                 "characters": list(d["characters"]),
             }
             for d in actors.to_dict("records")
@@ -150,7 +143,7 @@ def shows():
         crew = df_principals[(df_principals.tid == tid) & (df_principals.category != "actor")].sort_values("ordering")
         job_list = [
             {
-                "id": get_oid(d["pid"]),
+                "id": d["pid"],
                 "category": d["category"],
                 "job": d["job"] if d["job"] != d["category"] else "",
             }
@@ -215,7 +208,7 @@ def shows():
     with open(outfile, 'w') as f:
         json.dump([
             dropna({
-                "_id": get_oid(tid),
+                "_id": tid,
                 "tid": tid,
                 "basics": get_basics(tid),
                 "people": get_people(tid),
@@ -259,7 +252,7 @@ def users():
             {
                 "movieId": d["movieId"],
                 "rating": d["rating"],
-                "imdbId": get_oid(make_imdb_id(d["imdbId"])),
+                "imdbId": make_imdb_id(d["imdbId"]),
                 "timestamp": make_timestamp(d["timestamp"]),
             }
             for d in df_ratings[df_ratings.userId == uid].to_dict("records")
@@ -270,7 +263,7 @@ def users():
             {
                 "sessionId": d["sessionId"],
                 "eventType": d["eventType"].split('-')[1],
-                "imdbId": get_oid(make_imdb_id(d["imdbId"])),
+                "imdbId": make_imdb_id(d["imdbId"]),
                 "timestamp": make_timestamp(d["timestamp"]),
                 # Only available for eventType = playback
                 "timestamp_end": make_timestamp(d["playbackEndTimestamp"]),
@@ -289,7 +282,7 @@ def users():
     with open(outfile, 'w') as f:
         json.dump([
             dropna({
-                "_id": get_oid(uid),
+                "_id": uid,
                 "ratings": get_ratings(uid),
                 "events": get_events(uid),
             }) for uid in uids
