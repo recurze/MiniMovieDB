@@ -227,80 +227,32 @@ def shows():
         ], f, ensure_ascii=False, indent=4)
 
 
-def users():
-    def load_ratings():
-        filepath = pathlib.PurePath("data", "ml-25m", "links")
-        df_links = read_csv(filepath, delimiter=',')
+def user_ratings():
+    filepath = pathlib.PurePath("data", "ml-25m", "links.csv")
+    df = pd.read_csv(filepath, dtype={"movieId": int, "imdbId": str})
+    df = df.drop(["tmdbId"], axis=1)
+    movieId_to_imdbId = df.set_index("movieId").imdbId.map(lambda s: "tt" + s).to_dict()
 
-        filepath = pathlib.PurePath("data", "ml-25m", "ratings")
-        df = read_csv(filepath, delimiter=',')
+    filepath = pathlib.PurePath("data", "ml-25m", "ratings.csv")
+    df = pd.read_csv(filepath)
+    df.movieId = df.movieId.map(lambda x: movieId_to_imdbId[x])
 
-        df = df.join(df_links.set_index("movieId"), on="movieId")
-        return df.drop(["tmdbId"], axis=1)
+    df.rename(columns={"movieId": "imdbId"}, inplace=True)
 
-    def load_events():
-        filepath = pathlib.PurePath("data", "misc", "user_events.csv")
-        df_events = pd.read_csv(filepath, delimiter=',', quotechar='"')
-        df_events.drop(["tag"], axis=1, inplace=True)
-        return df_events
+    outfile = pathlib.PurePath("collections", "user_ratings.csv")
+    df.to_csv(outfile, index=False)
 
-    def make_imdb_id(s):
-        if not isinstance(s, str):
-            if math.isnan(s):
-                return ''
-            s = str(int(s))
-        return s if len(s) >= 7 else "tt" + '0'*(7 - len(s)) + s
 
-    def make_timestamp(t):
-        if math.isnan(t):
-            return ""
-        return datetime.fromtimestamp(t).strftime('%Y%m%d %H:%M:%S')
+def user_events():
+    filepath = pathlib.PurePath("data", "misc", "user_events.csv")
+    df = pd.read_csv(filepath)
 
-    def get_ratings(uid):
-        return [
-            {
-                "movieId": d["movieId"],
-                "rating": d["rating"],
-                "imdbId": make_imdb_id(d["imdbId"]),
-                "timestamp": make_timestamp(d["timestamp"]),
-            }
-            for d in df_ratings[df_ratings.userId == uid].to_dict("records")
-        ]
+    df = df.drop(["tag", "rating"], axis=1)
+    df.eventType = df.eventType.map(lambda x: x.split('-')[1])
 
-    def get_events(uid):
-        return [
-            {
-                "sessionId": d["sessionId"],
-                "eventType": d["eventType"].split('-')[1],
-                "imdbId": make_imdb_id(d["imdbId"]),
-                "timestamp": make_timestamp(d["timestamp"]),
-                # Only available for eventType = playback
-                "timestamp_end": make_timestamp(d["playbackEndTimestamp"]),
-                # Only available for eventType = rate
-                "rating": d["rating"],
-            }
-            for d in df_events[df_events.userId == uid].sort_values("timestamp").to_dict("records")
-        ]
+    outfile = pathlib.PurePath("collections", "user_events.csv")
+    df.to_csv(outfile, index=False)
 
-    def user_dict(uid):
-        return {
-            "_id": uid,
-            "ratings": get_ratings(uid),
-            "events": get_events(uid),
-        }
-
-    df_ratings = load_ratings()
-    df_events = load_events()
-
-    uids = list(set(df_ratings.userId))
-
-    outfile = pathlib.PurePath("collections", "users.json")
-    with open(outfile, 'w') as f:
-        json.dump(
-            IteratorAsList(user_dict(uid) for uid in uids),
-            f,
-            ensure_ascii=False,
-        )
 
 def prepare_collections(collections):
     os.makedirs("collections", exist_ok=True)
@@ -313,14 +265,16 @@ def prepare_collections(collections):
             people()
         elif collection == "shows":
             shows()
-        elif collection == "users":
-            users()
+        elif collection == "user_ratings":
+            user_ratings()
+        elif collection == "user_events":
+            user_events()
         else:
             continue
 
 
 if __name__ == "__main__":
-    known_collections = ["all", "people", "shows", "users"]
+    known_collections = ["all", "people", "shows", "user_ratings", "user_events"]
 
     if len(sys.argv) == 1:
         print(f"Usage: python {sys.argv[0]} <list of collections>")

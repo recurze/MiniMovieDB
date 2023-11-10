@@ -27,15 +27,15 @@ https://www.mongodb.com/developer/products/mongodb/mongodb-schema-design-best-pr
 
     - ratings
     - numVotes
-* users:
-    - username
-    - ratings (list):
-        + imdbId
-        + rating
-        + timestamp
-    - events (list):
-        + session id
-        + event type
-        + timestamp
-        + playbackEndTimestamp (for type = playback only)
-        + rating (for type = rating only)
+* user_ratings:
+    - user_id
+    - imdbId
+    - rating
+    - timestamp
+* user_events:
+    - user_id
+    - session id
+    - imdbId
+    - event type
+    - timestamp
+    - playbackEndTimestamp (for type = playback only)
