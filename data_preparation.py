@@ -1,4 +1,3 @@
-from datetime import datetime
 import json
 import math
 import os
@@ -28,6 +27,17 @@ def isna(x):
     if isinstance(x, dict) and x == {}:
         return True
     return False
+
+
+def join_series(s1, s2):
+    return pd.merge(
+        s1,
+        s2,
+        how="left",
+        left_index=True,
+        right_index=True,
+        validate="one_to_one",
+    )
 
 
 def dropna(d):
@@ -73,158 +83,130 @@ def people():
         )
 
 
-def shows():
+def shows_flat_attributes():
     def load_plots():
         filepath = pathlib.PurePath("data", "misc", "plots.csv")
-        plots = {}
-        with open(filepath, 'r') as f:
-
-            for line in f:
-                tid, plot = line.strip().split(',', 1)
-                plots[tid] = plot
-        return plots
-
-    def load_principals():
-        filepath = pathlib.PurePath("data", "imdb", "title.principals")
-        df = read_csv(filepath, ["tid", "ordering", "pid", "category", "job", "characters"])
-
-        def process_characters(s):
-            if isinstance(s, float) and math.isnan(s):
-                return ""
-            assert isinstance(s, str)
-            return [char.strip() for char in s[1:-1].replace('"', '').split(',')]
-
-        df["characters"] = df["characters"].apply(process_characters)
-
-        # Needlessly gendered
-        df["category"] = df.category.replace("actress", "actor")
-        return df
+        df = pd.read_csv(filepath, delimiter=',', quotechar='"').set_index("tconst")
+        return df.drop(["taglines"], axis=1)
 
     def load_ratings():
-        filepath = pathlib.PurePath("data", "imdb", "title.ratings")
-        return read_csv(filepath, ["tid", "averageRating", "numVotes"])
+        filepath = pathlib.PurePath("data", "imdb", "title.ratings.tsv")
+        return read_csv(filepath).set_index("tconst")
 
     def load_basics():
-        filepath = pathlib.PurePath("data", "imdb", "title.basics")
-        df = read_csv(filepath,
-                      ["tid", "ttype", "title", "original", "isAdult", "start", "end", "runtime", "genres"])
+        filepath = pathlib.PurePath("data", "imdb", "title.basics.tsv")
+        df = read_csv(filepath).set_index("tconst")
+        df.isAdult = df.isAdult.map({0: "no", 1: "yes"})
+        return df.drop(["originalTitle", "genres"], axis=1)
 
-        df.drop(["original"], axis=1, inplace=True)
+    def load_episode_info():
+        filepath = pathlib.PurePath("data", "imdb", "title.episode.tsv")
+        return read_csv(filepath, ["tconst", "parentId", "seasonNumber", "episodeNumber"]).set_index("tconst")
 
-        df.fillna({
-            "isAdult": 2,
-            "genres": "",
-        }, inplace=True)
+    outfile = pathlib.PurePath("collections", "shows.csv")
+    load_basics() \
+        .join(load_ratings(), validate="one_to_one") \
+        .join(load_plots(), validate="one_to_one") \
+        .join(load_episode_info(), validate="one_to_one") \
+        .rename_axis("_id") \
+        .to_csv(outfile)
 
-        df["isAdult"] = df["isAdult"].map({0: "no", 1: "yes", 2: ""})
 
-        return df
+def shows_list_attributes():
+    def load_genres():
+        filepath = pathlib.PurePath("data", "imdb", "title.basics.tsv")
+        df = read_csv(filepath).set_index("tconst")
+        return df["genres"].fillna("").map(lambda x: x.split(','))
 
     def load_akas():
         filepath = pathlib.PurePath("data", "imdb", "title.akas")
-        df = read_csv(filepath, ["tid", "ordering", "title", "A", "B", "C", "D", "E"])
-        return df[["tid", "ordering", "title"]]
+        df = read_csv(filepath)[["titleId", "ordering", "title"]].sort_values("ordering")
+        df = df.groupby("titleId").title.agg(lambda x: x.tolist())
+        return df.rename("aka")
 
     def load_tags():
         filepath = pathlib.PurePath("data", "ml-25m", "links.csv")
-        df_links = read_csv(filepath, delimiter=',')
+        df_links = pd.read_csv(filepath, dtype={"movieId": int, "imdbId": str}).set_index("movieId")
 
         filepath = pathlib.PurePath("data", "ml-25m", "genome-tags.csv")
-        df_tagnames = read_csv(filepath, delimiter=',')
+        df_tagnames = read_csv(filepath, delimiter=',').set_index("tagId")
 
         filepath = pathlib.PurePath("data", "ml-25m", "genome-scores.csv")
         df_tags = read_csv(filepath, delimiter=',')
 
-        df_tags = df_tags.join(df_tagnames.set_index("tagId"), on="tagId")
-        df_tags = df_tags.join(df_links.set_index("movieId"), on="movieId")
-        return df_tags.drop(["tagId", "movieId", "tmdbId"], axis=1)
+        df_tags = df_tags.join(df_tagnames, on="tagId").join(df_links, on="movieId")
 
-    def get_people(tid):
-        actors = df_principals[(df_principals.tid == tid) & (df_principals.category == "actor")].sort_values("ordering")
-        character_list = [
-            {
-                "id": d["pid"],
-                "characters": list(d["characters"]),
-            }
-            for d in actors.to_dict("records")
-        ]
+        df_tags = df_tags[["imdbId", "tag", "relevance"]].sort_values(["imdbId", "relevance"], ascending=False)
+        df_tags = df_tags.groupby("imdbId")[["tag", "relevance"]].agg(lambda x: x.tolist()[:20])
 
-        crew = df_principals[(df_principals.tid == tid) & (df_principals.category != "actor")].sort_values("ordering")
-        job_list = [
-            {
-                "id": d["pid"],
-                "category": d["category"],
-                "job": d["job"] if d["job"] != d["category"] else "",
-            }
-            for d in crew.to_dict("records")
-        ]
+        df_tags["tags"] = list(
+            [{"tag": tag, "relevance": relevance} for tag, relevance in zip(x, y)]
+            for x, y in zip(df_tags.tag, df_tags.relevance)
+        )
 
-        return {
-            "actors": character_list,
-            "crew": job_list,
-        }
+        df_tags.index = df_tags.index.map(lambda s: "tt" + s)
+        return df_tags["tags"].rename_axis("tconst")
 
-    def get_basics(tid):
-        basic = df_basics[df_basics.tid == tid].iloc[0]
-        akas = df_akas[df_akas.tid == tid].sort_values("ordering").title.tolist()
-        return {
-            "title": basic.title,
-            "type": basic.ttype,
-            "start": basic.start,
-            "end": basic.end,
-            "runtime": basic.runtime,
-            "isAdult": basic.isAdult,
-            "genres": basic.genres.split(',') if basic.genres else [],
-            "aka": list(set(akas)),
-        }
+    def load_actors():
+        def process_characters(s):
+            if not isinstance(s, str):
+                return []
+            return [char.strip() for char in s[1:-1].replace('"', '').split(',')]
 
-    def get_ratings(tid):
-        query = df_ratings[df_ratings.tid == tid]
-        if len(query) == 0:
-            return {}
+        filepath = pathlib.PurePath("data", "imdb", "title.principals.tsv")
+        df = read_csv(filepath)
 
-        rating = query.iloc[0]
-        return {
-            "rating": float(rating.averageRating),
-            "votes": int(rating.numVotes),
-        }
+        df = df[(df.category == "actor") | (df.category == "actress")].sort_values(["tconst", "ordering"])
 
-    def get_meta(tid):
-        query = df_tags[df_tags.imdbId == int(tid[2:])]
-        if len(query) == 0:
-            return {}
+        df["actors"] = list(
+            {"id": x, "characters": process_characters(y)}
+            for x, y in zip(df.nconst, df.characters)
+        )
+        return df.groupby("tconst")["actors"].agg(lambda x: x.dropna().tolist())
 
-        # 20 tags sufficient, there are like 1k total
-        tags = query.sort_values("relevance", ascending=False).head(20)
-        return {
-            "tags": [
-                {"tag": tag, "relevance": relevance}
-                for tag, relevance in zip(tags.tag, tags.relevance)
-            ],
-            "plot": plots.get(tid, ""),
-        }
+    def load_crew():
+        filepath = pathlib.PurePath("data", "imdb", "title.principals.tsv")
+        df = read_csv(filepath)
 
-    plots = load_plots()
+        df = df[(df.category != "actor") & (df.category != "actress")].sort_values(["tconst", "ordering"])
 
-    df_akas = load_akas()
-    df_basics = load_basics()
-    df_principals = load_principals()
-    df_ratings = load_ratings()
-    df_tags = load_tags()
+        df["crew"] = list(
+            {"id": x, "category": y}
+            for x, y in zip(df.nconst, df.category)
+        )
+        return df.groupby("tconst")["crew"].agg(lambda x: x.dropna().tolist())
 
-    tids = list(set(df_basics.tid))
+    merged = join_series(
+        join_series(
+            load_genres(),
+            load_akas()
+        ),
+        load_tags()
+    ).rename_axis("_id").reset_index(level=0)
+
+    for col in ["genres", "aka", "tags"]:
+        merged[col] = merged[col].map(lambda x: x if isinstance(x, list) else [])
+
     outfile = pathlib.PurePath("collections", "shows.json")
-    with open(outfile, 'w') as f:
-        json.dump([
-            dropna({
-                "_id": tid,
-                "tid": tid,
-                "basics": get_basics(tid),
-                "people": get_people(tid),
-                "rating": get_ratings(tid),
-                "meta": get_meta(tid),
-            }) for tid in tids
-        ], f, ensure_ascii=False, indent=4)
+    merged.to_json(outfile, orient="records", force_ascii=False)
+    del merged
+
+    actors = load_actors().rename_axis("_id").reset_index(level=0)
+
+    outfile = pathlib.PurePath("collections", "shows.actors.json")
+    actors.to_json(outfile, orient="records", force_ascii=False)
+    del actors
+
+    crew = load_crew().rename_axis("_id").reset_index(level=0)
+
+    outfile = pathlib.PurePath("collections", "shows.crew.json")
+    crew.to_json(outfile, orient="records", force_ascii=False)
+    del crew
+
+
+def shows():
+    shows_flat_attributes()
+    shows_list_attributes()
 
 
 def user_ratings():
