@@ -1,0 +1,685 @@
+Current Mongosh Log ID:	655033a647634cb5cde34e78
+Connecting to:		mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.0.2
+Using MongoDB:		7.0.2
+Using Mongosh:		2.0.2
+
+For mongosh info see: [1mhttps://docs.mongodb.com/mongodb-shell/[0m
+
+------
+   The server generated these startup warnings when booting
+   2023-11-09T16:12:22.433+08:00: Using the XFS filesystem is strongly recommended with the WiredTiger storage engine. See http://dochub.mongodb.org/core/prodnotes-filesystem
+   2023-11-09T16:12:22.848+08:00: Access control is not enabled for the database. Read and write access to data and configuration is unrestricted
+   2023-11-09T16:12:22.848+08:00: /sys/kernel/mm/transparent_hugepage/enabled is 'always'. We suggest setting it to 'never'
+   2023-11-09T16:12:22.848+08:00: vm.max_map_count is too low
+------
+
+test> switched to db MiniMovieDB
+MiniMovieDB> people
+shows
+user_events
+user_ratings
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... [Function: runQuery]
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... ... ... [Function: createIndices]
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... ... ... ... Uncaught MongoServerError: E11000 duplicate key error collection: MiniMovieDB.shows index: _id_ dup key: { _id: "tt51045104" }
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... ... ... ... ... ... 
+Query 2. Update end year for tt51045104 (title: DSA5104).
+Time: 3ms, #results: undefined
+
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> ... ... {
+  _id: 'tt51045104',
+  primaryTitle: 'DSA5104',
+  titleType: 'Lectures',
+  start: 2023,
+  end: 2023
+}
+
+Query 2. DSA5104.
+Time: 5ms, #results: 1
+
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... 
+Query 3. Find movies with 'pulp fiction' in the title.
+Time: 6182ms, #results: 72
+
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... {
+  _id: 'tt0304141',
+  titleType: 'movie',
+  primaryTitle: 'Harry Potter and the Prisoner of Azkaban',
+  isAdult: 'no',
+  startYear: 2004,
+  runtimeMinutes: 142,
+  averageRating: 7.9,
+  numVotes: 670412,
+  plot: 'Harry Potter, Ron and Hermione return to Hogwarts School of Witchcraft and Wizardry for their third year of study, where they delve into the mystery surrounding an escaped prisoner who poses a dangerous threat to the young wizard.',
+  budgetAmount: 130000000,
+  budgetCurrency: 'USD',
+  aka: [],
+  genres: [
+    'Adventure',
+    'Family',
+    'Fantasy'
+  ],
+  tags: [
+    {
+      tag: 'emma watson',
+      relevance: 0.99625
+    },
+    {
+      tag: 'wizards',
+      relevance: 0.9955
+    },
+    {
+      tag: 'fantasy world',
+      relevance: 0.99025
+    },
+    {
+      tag: 'based on book',
+      relevance: 0.98775
+    },
+    {
+      tag: 'adapted from:book',
+      relevance: 0.98725
+    },
+    {
+      tag: 'magic',
+      relevance: 0.9845
+    },
+    {
+      tag: 'based on a book',
+      relevance: 0.98375
+    },
+    {
+      tag: 'harry potter',
+      relevance: 0.98325
+    },
+    {
+      tag: 'good versus evil',
+      relevance: 0.96675
+    },
+    {
+      tag: 'boarding school',
+      relevance: 0.961
+    },
+    {
+      tag: 'franchise',
+      relevance: 0.96075
+    },
+    {
+      tag: 'books',
+      relevance: 0.954
+    },
+    {
+      tag: 'series',
+      relevance: 0.92825
+    },
+    {
+      tag: 'coming of age',
+      relevance: 0.92775
+    },
+    {
+      tag: 'parallel universe',
+      relevance: 0.92275
+    },
+    {
+      tag: 'mythology',
+      relevance: 0.91125
+    },
+    {
+      tag: 'fantasy',
+      relevance: 0.9105
+    },
+    {
+      tag: 'dark fantasy',
+      relevance: 0.90425
+    },
+    {
+      tag: 'book was better',
+      relevance: 0.898
+    },
+    {
+      tag: 'book',
+      relevance: 0.89125
+    }
+  ],
+  actors: [
+    {
+      id: 'nm0705356',
+      characters: [
+        'Harry Potter'
+      ]
+    },
+    {
+      id: 'nm0914612',
+      characters: [
+        'Hermione Granger'
+      ]
+    },
+    {
+      id: 'nm0342488',
+      characters: [
+        'Ron Weasley'
+      ]
+    },
+    {
+      id: 'nm0341743',
+      characters: [
+        'Uncle Vernon'
+      ]
+    }
+  ],
+  crew: [
+    {
+      id: 'nm0190859',
+      category: 'director'
+    },
+    {
+      id: 'nm0746830',
+      category: 'writer'
+    },
+    {
+      id: 'nm0460141',
+      category: 'writer'
+    },
+    {
+      id: 'nm0001060',
+      category: 'producer'
+    },
+    {
+      id: 'nm0382268',
+      category: 'producer'
+    },
+    {
+      id: 'nm0650038',
+      category: 'producer'
+    }
+  ]
+}
+
+Query 4. Find movies about escaped prisoner and wizards (plot).
+Time: 15058ms, #results: 1
+
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... [
+  {
+    _id: 'tt0816692',
+    primaryTitle: 'Interstellar',
+    plot: 'When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot, Joseph Cooper, is tasked to pilot a spacecraft, along with a team of researchers, to find a new planet for humans.',
+    genres: [
+      'Adventure',
+      'Drama',
+      'Sci-Fi'
+    ]
+  }
+]
+
+Query 5. List shows with at least one of user's preference from each category
+Time: 27102ms, #results: 1
+
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... [
+  {
+    _id: 'tt0058796',
+    count: 14729
+  }
+]
+
+Query 6. Find all the episodes of the show with the greatest number of episodes where the episode primary title, season number and episode number are all known, in chronological order.
+Time: 9259ms, #results: 1
+
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... [
+  {
+    _id: ObjectId("654eba34e0c82632e045fa27"),
+    userId: 5104,
+    imdbId: 'tt0053125',
+    eventType: 'impression',
+    sessionId: 190619,
+    eventId: 29626593,
+    isoDate: ISODate("2005-09-30T05:41:43.000Z")
+  },
+  {
+    _id: ObjectId("654eba34e0c82632e04605be"),
+    userId: 5104,
+    imdbId: 'tt0053125',
+    eventType: 'click',
+    sessionId: 190619,
+    eventId: 29627678,
+    isoDate: ISODate("2005-09-30T12:34:06.000Z")
+  },
+  {
+    _id: ObjectId("654eba34e0c82632e04667b2"),
+    userId: 5104,
+    imdbId: 'tt0053125',
+    eventType: 'view',
+    sessionId: 190619,
+    eventId: 29653816,
+    isoDate: ISODate("2005-10-03T15:17:20.000Z")
+  },
+  {
+    _id: ObjectId("654eba34e0c82632e0466b3a"),
+    userId: 5104,
+    imdbId: 'tt0053125',
+    eventType: 'playback',
+    playbackEndTimestamp: 1128382369,
+    sessionId: 190619,
+    eventId: 29654713,
+    isoDate: ISODate("2005-10-03T21:16:49.000Z")
+  },
+  {
+    _id: ObjectId("654eba34e0c82632e0469508"),
+    userId: 5104,
+    imdbId: 'tt0113117',
+    eventType: 'impression',
+    sessionId: 190619,
+    eventId: 29665490,
+    isoDate: ISODate("2005-10-05T11:55:04.000Z")
+  },
+  {
+    _id: ObjectId("654eba34e0c82632e04696bb"),
+    userId: 5104,
+    imdbId: 'tt0113117',
+    eventType: 'click',
+    sessionId: 190619,
+    eventId: 29665886,
+    isoDate: ISODate("2005-10-05T15:24:11.000Z")
+  },
+  {
+    _id: ObjectId("654eba34e0c82632e04698e1"),
+    userId: 5104,
+    imdbId: 'tt0077631',
+    eventType: 'impression',
+    sessionId: 190619,
+    eventId: 29666858,
+    isoDate: ISODate("2005-10-05T17:26:09.000Z")
+  },
+  {
+    _id: ObjectId("654eba34e0c82632e0469afd"),
+    userId: 5104,
+    imdbId: 'tt0077631',
+    eventType: 'click',
+    sessionId: 190619,
+    eventId: 29667541,
+    isoDate: ISODate("2005-10-05T18:35:31.000Z")
+  },
+  {
+    _id: ObjectId("654eba34e0c82632e0469cd4"),
+    userId: 5104,
+    imdbId: 'tt0097523',
+    eventType: 'impression',
+    sessionId: 190619,
+    eventId: 29667618,
+    isoDate: ISODate("2005-10-05T18:38:22.000Z")
+  },
+  {
+    _id: ObjectId("654eba34e0c82632e046a1e3"),
+    userId: 5104,
+    imdbId: 'tt0120616',
+    eventType: 'impression',
+    sessionId: 190619,
+    eventId: 29667678,
+    isoDate: ISODate("2005-10-05T18:39:51.000Z")
+  },
+  {
+    _id: ObjectId("654eba34e0c82632e0469a4a"),
+    userId: 5104,
+    imdbId: 'tt0120616',
+    eventType: 'click',
+    sessionId: 190619,
+    eventId: 29667750,
+    isoDate: ISODate("2005-10-05T18:42:26.000Z")
+  },
+  {
+    _id: ObjectId("654eba34e0c82632e0469a4f"),
+    userId: 5104,
+    imdbId: 'tt0053125',
+    eventType: 'rate',
+    sessionId: 190619,
+    eventId: 29667752,
+    isoDate: ISODate("2005-10-05T18:43:28.000Z")
+  },
+  {
+    _id: ObjectId("654eba34e0c82632e046a178"),
+    userId: 5104,
+    imdbId: 'tt0047396',
+    eventType: 'impression',
+    sessionId: 190619,
+    eventId: 29667753,
+    isoDate: ISODate("2005-10-05T18:43:41.000Z")
+  },
+  {
+    _id: ObjectId("654eba34e0c82632e046a17b"),
+    userId: 5104,
+    imdbId: 'tt0113117',
+    eventType: 'rate',
+    sessionId: 190619,
+    eventId: 29667754,
+    isoDate: ISODate("2005-10-05T18:43:45.000Z")
+  },
+  {
+    _id: ObjectId("654eba34e0c82632e0469a53"),
+    userId: 5104,
+    imdbId: 'tt0077631',
+    eventType: 'rate',
+    sessionId: 190619,
+    eventId: 29667756,
+    isoDate: ISODate("2005-10-05T18:43:49.000Z")
+  },
+  {
+    _id: ObjectId("654eba34e0c82632e046a46a"),
+    userId: 5104,
+    imdbId: 'tt0047396',
+    eventType: 'click',
+    sessionId: 190619,
+    eventId: 29667757,
+    isoDate: ISODate("2005-10-05T18:43:51.000Z")
+  },
+  {
+    _id: ObjectId("654eba34e0c82632e046a1fb"),
+    userId: 5104,
+    imdbId: 'tt0097523',
+    eventType: 'rate',
+    sessionId: 190619,
+    eventId: 29667758,
+    isoDate: ISODate("2005-10-05T18:43:55.000Z")
+  }
+]
+
+Query 7. List all events of the last session of the user "5104" in chronological order.
+Time: 45781ms, #results: 17
+
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... [
+  {
+    top10: [
+      {
+        _id: 'tt5491994',
+        avgRatings: 4.483096085409253,
+        numRatings: 1124,
+        title: 'Planet Earth II'
+      },
+      {
+        _id: 'tt0795176',
+        avgRatings: 4.464796794504865,
+        numRatings: 1747,
+        title: 'Planet Earth'
+      },
+      {
+        _id: 'tt0111161',
+        avgRatings: 4.413576004516335,
+        numRatings: 81482,
+        title: 'The Shawshank Redemption'
+      },
+      {
+        _id: 'tt0185906',
+        avgRatings: 4.398598820058997,
+        numRatings: 1356,
+        title: 'Band of Brothers'
+      },
+      {
+        _id: 'tt0081846',
+        avgRatings: 4.3267148014440435,
+        numRatings: 277,
+        title: 'Cosmos'
+      },
+      {
+        _id: 'tt0068646',
+        avgRatings: 4.324336165187245,
+        numRatings: 52498,
+        title: 'The Godfather'
+      },
+      {
+        _id: 'tt6769208',
+        avgRatings: 4.289833080424886,
+        numRatings: 659,
+        title: 'Blue Planet II'
+      },
+      {
+        _id: 'tt0114814',
+        avgRatings: 4.284353213163313,
+        numRatings: 55366,
+        title: 'The Usual Suspects'
+      },
+      {
+        _id: 'tt0278784',
+        avgRatings: 4.267361111111111,
+        numRatings: 288,
+        title: 'Pilot'
+      },
+      {
+        _id: 'tt0071562',
+        avgRatings: 4.2617585117585115,
+        numRatings: 34188,
+        title: 'The Godfather Part II'
+      }
+    ],
+    bottom10: [
+      {
+        _id: 'tt0270846',
+        avgRatings: 0.8990384615384616,
+        numRatings: 208,
+        title: 'Superbabies: Baby Geniuses 2'
+      },
+      {
+        _id: 'tt0339034',
+        avgRatings: 1.0275779376498801,
+        numRatings: 417,
+        title: 'From Justin to Kelly'
+      },
+      {
+        _id: 'tt0118589',
+        avgRatings: 1.1255605381165918,
+        numRatings: 669,
+        title: 'Glitter'
+      },
+      {
+        _id: 'tt0120598',
+        avgRatings: 1.1952141057934509,
+        numRatings: 397,
+        title: "Barney's Great Adventure"
+      },
+      {
+        _id: 'tt1213644',
+        avgRatings: 1.2055655296229804,
+        numRatings: 557,
+        title: 'Disaster Movie'
+      },
+      {
+        _id: 'tt0299930',
+        avgRatings: 1.2143799472295516,
+        numRatings: 758,
+        title: 'Gigli'
+      },
+      {
+        _id: 'tt0362165',
+        avgRatings: 1.2322274881516588,
+        numRatings: 633,
+        title: 'Son of the Mask'
+      },
+      {
+        _id: 'tt0115834',
+        avgRatings: 1.2740740740740741,
+        numRatings: 135,
+        title: 'Carnosaur 3: Primal Species'
+      },
+      {
+        _id: 'tt0223250',
+        avgRatings: 1.2746913580246915,
+        numRatings: 162,
+        title: 'Faces of Death VI'
+      },
+      {
+        _id: 'tt0347791',
+        avgRatings: 1.3211267605633803,
+        numRatings: 355,
+        title: 'Pokémon Heroes'
+      }
+    ]
+  }
+]
+
+Query 8. List 10 best and 10 worst shows rated at least 100 times, sorted by average rating.
+Time: 16063ms, #results: 1
+
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... [
+  {
+    _id: 'view',
+    avgCount: 4.882117080994386,
+    avgWatchTimeInMinutes: 0
+  },
+  {
+    _id: 'tag',
+    avgCount: 14.810126582278482,
+    avgWatchTimeInMinutes: 0
+  },
+  {
+    _id: 'playback',
+    avgCount: 4.058186738836265,
+    avgWatchTimeInMinutes: 90.27850699142986
+  },
+  {
+    _id: 'rate',
+    avgCount: 18.924564796905223,
+    avgWatchTimeInMinutes: 0
+  },
+  {
+    _id: 'click',
+    avgCount: 5.703054298642534,
+    avgWatchTimeInMinutes: 0
+  },
+  {
+    _id: 'impression',
+    avgCount: 6.891376846117199,
+    avgWatchTimeInMinutes: 0
+  }
+]
+
+Query 9. Compute aggregate metrics in the week of 2010-01-01
+Time: 39774ms, #results: 6
+
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
+Query 10. Compute average number of distinct shows watched per day by genre in the week 2010-01-01
+Time: 19578ms, #results: 24
+
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
+Query 11. Compute average load (#playback events) by hour in the week of 2010-01-01
+Time: 13275ms, #results: 24
+
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... [
+  {
+    numCollaborations: 9988,
+    actor1: 'Tito Sotto',
+    actor2: 'Vic Sotto'
+  },
+  {
+    numCollaborations: 9945,
+    actor1: 'Tito Sotto',
+    actor2: 'Joel de Leon'
+  },
+  {
+    numCollaborations: 9945,
+    actor1: 'Vic Sotto',
+    actor2: 'Joel de Leon'
+  },
+  {
+    numCollaborations: 8024,
+    actor1: 'Pia Arcangel',
+    actor2: 'Arnold Clavio'
+  },
+  {
+    numCollaborations: 7934,
+    actor1: 'Manuela do Monte',
+    actor2: 'Giovanna Grigio'
+  }
+]
+
+Query 12. Find the top 5 pairs of actors with greatest number of collaborations
+Time: 613365ms, #results: 5
+
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... [
+  {
+    _id: 'EUR',
+    avgBudget: 6266666.666666667
+  },
+  {
+    _id: 'USD',
+    avgBudget: 18071527.590425532
+  },
+  {
+    _id: 'BRL',
+    avgBudget: 3300000
+  },
+  {
+    _id: 'RUR',
+    avgBudget: 661828.25
+  },
+  {
+    _id: 'JPY',
+    avgBudget: 1190000000
+  },
+  {
+    _id: 'KRW',
+    avgBudget: 10000000000
+  },
+  {
+    _id: 'FRF',
+    avgBudget: 54375125
+  },
+  {
+    _id: 'GBP',
+    avgBudget: 2781595.8333333335
+  },
+  {
+    _id: 'AUD',
+    avgBudget: 800000
+  },
+  {
+    _id: 'DEM',
+    avgBudget: 4300000
+  },
+  {
+    _id: 'DKK',
+    avgBudget: 20000000
+  }
+]
+
+Query 13. Compute average budget by currency for shows (numRatings > 100, avgRating > 4)
+Time: 17365ms, #results: 11
+
+MiniMovieDB> 
+MiniMovieDB> ... ... ... 
+MiniMovieDB> 

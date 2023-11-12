@@ -36,3 +36,7 @@ sh import_collection_from_file.sh collections/shows.crew.json --mode=merge
 ```
 
 Takes around 30 minutes
+
+## Queries
+
+See `natural_language_queries.txt` for list of queries. Run `mongosh < queries.js > queries_out.txt`.

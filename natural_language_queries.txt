@@ -1,0 +1,24 @@
+1. Add a new show with imdbId "tt51045104", primaryTitle "DSA5104 Project" and startYear 2023.
+2. Update the show with imdbId "tt51045104" with endYear 2023.
+3. List all shows whose primary title contains "pulp fiction" (case-insensitive).
+4. Find the show whose tagline contains "may the force be with you" (case-insensitive).
+5. List the shows with at least one of the user's matching preferences for each category.
+    - Genre: Adventure, IMAX
+    - Actor/actress: Cillian Murphy, Anne Hathaway
+    - Director: Quentin Tarantino, Christopher Nolan
+6. Find all the episodes of the show with the greatest number of episodes where the episode primary title, season number and episode number are all known, in chronological order.
+7. List all events of the last session of the user "5104" in chronological order.
+8. List 10 best and 10 worst shows rated at least 100 times, sorted by average rating.
+9. Compute the following metrics aggregated over all users during week X (only considering events starting from the first impression event onwards during week X):
+    - avgNumShow
+    - avgWatchTime
+    - avgClickThruRate
+    - avgWatchRate
+    - avgCompletionRate
+10. The company would like to provide further details of the playback events in the dashboard by genre. For each genre, find the average number of distinct shows watched per day aggregated over all users during week X (only considering events starting during week X). Cross-day playback events are attributed only to the first day.
+11. The company would like to plan for the scaling of the server according to the user demand. Sort the hour of the day in decreasing total number of playback events across all users over week X. Cross-hour playback events are attributed to all hours.
+12. Find the top 5 pairs of actors/actresses who worked together in greatest number of shows.
+13. Find the average budget for each currency, for shows rated at least 100 times with an average rating of at least 4.
+14. Find the average number of regions and languages for shows rated at least 100 times with an average rating of at least 4.
+15. The company would like to provide content-based recommendations to individual user by finding shows similar to those rated highly by the user. Define the user’s genome tag preference to be genome tag with a relevance of greater than 0.95 to at least one of the shows with a rating of 5 given by user. Recommend shows with a relevance of at least 0.95 to at least one of the genome tag preferences of the user with userId `5104`, in descending order of the number of genome tag preference matches.
+16. The company would like to provide user-based recommendations to individual user by finding shows rated highly by the users similar to the user. Define users to be similar if there is at least one show rated by both users with a rating of 5. Recommend shows rated by users similar to user with userId `5104` with a rating of 5 in descending order of the number of similar users matches.
