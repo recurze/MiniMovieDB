@@ -71,6 +71,7 @@ def people():
     infile = pathlib.PurePath("data", "imdb", "name.basics.tsv")
     df = read_csv(infile, ["id", "name", "birth", "death", "professions", "knownFor"])
 
+    df = df.rename(columns={"id": "_id"})
     df.knownFor = df.knownFor.fillna("").map(lambda x: x.split(','))
     df.professions = df.professions.fillna("").map(lambda x: x.split(','))
 
