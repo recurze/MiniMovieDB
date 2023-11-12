@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from pymongo import MongoClient
 
+from routes import show_router
+
 
 app = FastAPI()
 
@@ -17,3 +19,6 @@ def startup_db_client():
 @app.on_event("shutdown")
 def shutdown_db_client():
     app.client.close()
+
+
+app.include_router(show_router, tags=["show"], prefix="/show")
