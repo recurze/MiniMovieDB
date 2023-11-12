@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Show Filter</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-4">
+    <h2>Movie Filter</h2>
+    <!-- Filter Form -->
+    <form id="filterForm">
+        <div class="form-group">
+            <label for="title">Title:</label>
+            <input type="text" class="form-control" id="title" placeholder="Enter title">
+        </div>
+        <div class="form-group">
+            <label for="genre">Genre:</label>
+            <input type="text" class="form-control" id="genre" placeholder="Enter genre">
+        </div>
+        <button type="button" class="btn btn-primary" onclick="filterMovies()">Filter</button>
+    </form>
+    <!-- Display Filtered Movies -->
+    <div id="filteredMovies" class="mt-4"></div>
+</div>
+
+<script>
+    async function filterMovies() {
+        const title = document.getElementById('title').value;
+        const genre = document.getElementById('genre').value;
+
+        // Call FastAPI endpoint to filter movies
+        const response = await fetch(`/show/search/${title}?genres=${genre}`);
+        const movies = await response.json();
+        console.log(movies)
+
+        // Display filtered movies
+        const filteredMoviesDiv = document.getElementById('filteredMovies');
+        filteredMoviesDiv.innerHTML = '<h4>Filtered Movies</h4>';
+        if (movies.length === 0) {
+            filteredMoviesDiv.innerHTML += '<p>No movies found.</p>';
+        } else {
+            const movieList = document.createElement('ul');
+            movies.forEach(movie => {
+                const a = document.createElement('a');
+                a.href = 'https://imdb.com/title/' + `${movie._id}`
+                a.textContent = `${movie.primaryTitle} (${movie.titleType}, ${movie.startYear}) - ${movie.genres.join(', ')}`;
+                const listItem = document.createElement('li');
+                listItem.appendChild(a)
+                movieList.appendChild(listItem);
+            });
+            filteredMoviesDiv.appendChild(movieList);
+        }
+    }
+</script>
+
+</body>
+</html>

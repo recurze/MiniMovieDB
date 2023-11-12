@@ -1,10 +1,18 @@
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pymongo import MongoClient
 
 from routes import show_router
 
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static", html=True), name="static")
+
+
+@app.get("/", response_class=HTMLResponse)
+async def read_root():
+    return HTMLResponse(content=open("static/index.html").read(), status_code=200)
 
 
 @app.on_event("startup")
