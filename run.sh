@@ -22,7 +22,9 @@ activate_venv(){
 
 
 run_server(){
-    python -m uvicorn src.main:app --reload
+    pushd app
+    python -m uvicorn main:app --reload
+    popd
 }
 
 
@@ -31,6 +33,6 @@ SRC_DIR=`dirname "$0"`
 pushd $SRC_DIR
 
 activate_venv
-#run_server
+run_server
 
 popd
