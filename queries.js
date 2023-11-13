@@ -45,7 +45,7 @@ runQuery(function() {
         "_id": "tt51045104",
         "primaryTitle": "DSA5104",
         "titleType": "Lectures",
-        "start": 2023,
+        "startYear": 2023,
     });
 }, "1. Add new show DSA5104 (tt51045104) released in 2023.", "insert");
 
@@ -55,7 +55,7 @@ runQuery(function() {
         {"_id": "tt51045104"},
         {
             $set: {
-                "end": 2023,
+                "endYear": 2023,
             },
         }
     );
@@ -68,27 +68,41 @@ runQuery(function() {
 
 
 runQuery(function() {
-    return db.shows.find({
-        "primaryTitle": {$regex: /pulp fiction/i},
-    });
+    return db.shows.find(
+        {
+            "primaryTitle": {$regex: /pulp fiction/i},
+        },
+        {
+            _id: 1,
+            primaryTitle: 1,
+            startYear: 1,
+            plot: 1
+        }
+    );
 }, "3. Find movies with 'pulp fiction' in the title.");
 
 
-// I did not store taglines, so instead will search plot
 runQuery(function() {
-    return db.shows.find({
-        "plot": {$regex: /escaped prisoner.*wizard/i},
-    });
-}, "4. Find movies about escaped prisoner and wizards (plot).");
+    return db.shows.find(
+        {
+            "taglines": { $regex: /^May the Force be with you/ },
+        },
+        {
+            _id: 1,
+            primaryTitle: 1,
+            startYear: 1,
+            plot: 1
+        }
+    );
+}, "4. Find movies with tagline \"May the Force be with you.\"")
 
 
-// Um, IMAX is not genre...
 runQuery(function() {
     return db.shows.aggregate([
         {
             $match: {
                 "genres": {
-                    $in: ["Adventure", "IMAX"]
+                    $in: ["Adventure", "Thriller"]
                 },
             }
         },
@@ -129,7 +143,7 @@ runQuery(function() {
         {
             $project: {
                 primaryTitle: 1,
-                start: 1,
+                startYear: 1,
                 plot: 1,
                 genres: 1,
             }
@@ -182,8 +196,16 @@ runQuery(function() {
         },
         {
             $sort: {
-                seasonNumber: 1,
-                episodeNumber: 1,
+                "episodes.seasonNumber": 1,
+                "episodes.episodeNumber": 1,
+            }
+        },
+        {
+            $project: {
+                _id: "$episodes._id",
+                seasonNumber: "$episodes.seasonNumber",
+                episodeNumber: "$episodes.episodeNumber",
+                primaryTitle: "$episodes.primaryTitle"
             }
         }
     ]).toArray();
@@ -431,11 +453,9 @@ runQuery(function() {
             }
         },
         {
-            $group: {
-                _id: "$genre",
-                avgNumShowsPerDay: {
-                    $avg: "$numShows"
-                }
+            $sort: {
+                date: 1,
+                numShows: -1
             }
         }
     ]).toArray();
@@ -658,6 +678,7 @@ runQuery(function() {
     ]).toArray();
 }, "13. Compute average budget by currency for shows (numRatings > 100, avgRating > 4)", "aggregate");
 
+
 runQuery(function() {
     return db.shows.aggregate([
         {
@@ -682,6 +703,7 @@ runQuery(function() {
         }
     ]).toArray();
 }, "temp collection", "aggregate");
+
 
 
 runQuery(function() {
@@ -723,7 +745,7 @@ runQuery(function() {
         },
         {
             $group: {
-                _id: "$recommendation.id"
+                _id: "$recommendation.id",
                 numTagMatches: {
                     $sum: 1
                 }
@@ -752,7 +774,7 @@ runQuery(function() {
             }
         },
     ]).toArray();
-}, "15. Recommend shows to user \"5104\" based on number of tag (with > 0.95 relevance) matches with 5-rated shows", "aggregate");
+}, "14. Recommend shows to user \"5104\" based on number of tag (with > 0.95 relevance) matches with 5-rated shows", "aggregate");
 
 
 runQuery(function() {
@@ -825,4 +847,4 @@ runQuery(function() {
             }
         }
     ]).toArray();
-}, "16. Recommend shows to user \"5104\" based on number of watches by users with similar taste", "aggregate");
+}, "15. Recommend shows to user \"5104\" based on number of watches by users with similar taste", "aggregate");

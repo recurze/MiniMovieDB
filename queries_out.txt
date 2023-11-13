@@ -42,8 +42,8 @@ MiniMovieDB> ... ... {
   _id: 'tt51045104',
   primaryTitle: 'DSA5104',
   titleType: 'Lectures',
-  start: 2023,
-  end: 2023
+  startYear: 2023,
+  endYear: 2023
 }
 
 Query 2. DSA5104.
@@ -57,188 +57,51 @@ Time: 6182ms, #results: 72
 
 MiniMovieDB> 
 MiniMovieDB> 
-MiniMovieDB> 
-MiniMovieDB> ... ... ... ... {
-  _id: 'tt0304141',
-  titleType: 'movie',
-  primaryTitle: 'Harry Potter and the Prisoner of Azkaban',
-  isAdult: 'no',
-  startYear: 2004,
-  runtimeMinutes: 142,
-  averageRating: 7.9,
-  numVotes: 670412,
-  plot: 'Harry Potter, Ron and Hermione return to Hogwarts School of Witchcraft and Wizardry for their third year of study, where they delve into the mystery surrounding an escaped prisoner who poses a dangerous threat to the young wizard.',
-  budgetAmount: 130000000,
-  budgetCurrency: 'USD',
-  aka: [],
-  genres: [
-    'Adventure',
-    'Family',
-    'Fantasy'
-  ],
-  tags: [
-    {
-      tag: 'emma watson',
-      relevance: 0.99625
-    },
-    {
-      tag: 'wizards',
-      relevance: 0.9955
-    },
-    {
-      tag: 'fantasy world',
-      relevance: 0.99025
-    },
-    {
-      tag: 'based on book',
-      relevance: 0.98775
-    },
-    {
-      tag: 'adapted from:book',
-      relevance: 0.98725
-    },
-    {
-      tag: 'magic',
-      relevance: 0.9845
-    },
-    {
-      tag: 'based on a book',
-      relevance: 0.98375
-    },
-    {
-      tag: 'harry potter',
-      relevance: 0.98325
-    },
-    {
-      tag: 'good versus evil',
-      relevance: 0.96675
-    },
-    {
-      tag: 'boarding school',
-      relevance: 0.961
-    },
-    {
-      tag: 'franchise',
-      relevance: 0.96075
-    },
-    {
-      tag: 'books',
-      relevance: 0.954
-    },
-    {
-      tag: 'series',
-      relevance: 0.92825
-    },
-    {
-      tag: 'coming of age',
-      relevance: 0.92775
-    },
-    {
-      tag: 'parallel universe',
-      relevance: 0.92275
-    },
-    {
-      tag: 'mythology',
-      relevance: 0.91125
-    },
-    {
-      tag: 'fantasy',
-      relevance: 0.9105
-    },
-    {
-      tag: 'dark fantasy',
-      relevance: 0.90425
-    },
-    {
-      tag: 'book was better',
-      relevance: 0.898
-    },
-    {
-      tag: 'book',
-      relevance: 0.89125
-    }
-  ],
-  actors: [
-    {
-      id: 'nm0705356',
-      characters: [
-        'Harry Potter'
-      ]
-    },
-    {
-      id: 'nm0914612',
-      characters: [
-        'Hermione Granger'
-      ]
-    },
-    {
-      id: 'nm0342488',
-      characters: [
-        'Ron Weasley'
-      ]
-    },
-    {
-      id: 'nm0341743',
-      characters: [
-        'Uncle Vernon'
-      ]
-    }
-  ],
-  crew: [
-    {
-      id: 'nm0190859',
-      category: 'director'
-    },
-    {
-      id: 'nm0746830',
-      category: 'writer'
-    },
-    {
-      id: 'nm0460141',
-      category: 'writer'
-    },
-    {
-      id: 'nm0001060',
-      category: 'producer'
-    },
-    {
-      id: 'nm0382268',
-      category: 'producer'
-    },
-    {
-      id: 'nm0650038',
-      category: 'producer'
-    }
-  ]
+MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... {
+  _id: 'tt0076759',
+  primaryTitle: 'Star Wars: Episode IV - A New Hope',
+  startYear: 1977,
+  plot: "Luke Skywalker joins forces with a Jedi Knight, a cocky pilot, a Wookiee and two droids to save the galaxy from the Empire's world-destroying battle station, while also attempting to rescue Princess Leia from the mysterious Darth Vader."
 }
 
-Query 4. Find movies about escaped prisoner and wizards (plot).
-Time: 15058ms, #results: 1
+Query 4. Find movies with tagline "May the Force be with you."
+Time: 11146ms, #results: 1
 
-MiniMovieDB> 
 MiniMovieDB> 
 MiniMovieDB> 
 MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... [
   {
     _id: 'tt0816692',
     primaryTitle: 'Interstellar',
+    startYear: 2014,
     plot: 'When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot, Joseph Cooper, is tasked to pilot a spacecraft, along with a team of researchers, to find a new planet for humans.',
     genres: [
       'Adventure',
       'Drama',
       'Sci-Fi'
     ]
+  },
+  {
+    _id: 'tt1345836',
+    primaryTitle: 'The Dark Knight Rises',
+    startYear: 2012,
+    plot: "Eight years after the Joker's reign of chaos, Batman is coerced out of exile with the assistance of the mysterious Selina Kyle in order to defend Gotham City from the vicious guerrilla terrorist Bane.",
+    genres: [
+      'Action',
+      'Drama',
+      'Thriller'
+    ]
   }
 ]
 
 Query 5. List shows with at least one of user's preference from each category
-Time: 25121ms, #results: 1
+Time: 34821ms, #results: 2
 
 MiniMovieDB> 
 MiniMovieDB> 
 MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
 Query 6. Find all the episodes of the show with the greatest number of episodes where the episode primary title, season number and episode number are all known, in chronological order.
-Time: 20632ms, #results: 14729
+Time: 18277ms, #results: 14729
 
 MiniMovieDB> 
 MiniMovieDB> 
@@ -400,7 +263,7 @@ MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ...
 ]
 
 Query 7. List all events of the last session of the user "5104" in chronological order.
-Time: 45781ms, #results: 17
+Time: 42490ms, #results: 17
 
 MiniMovieDB> 
 MiniMovieDB> 
@@ -572,20 +435,20 @@ MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ...
 ]
 
 Query 9. Compute aggregate metrics in the week of 2010-01-01
-Time: 39774ms, #results: 6
+Time: 34319ms, #results: 6
 
 MiniMovieDB> 
 MiniMovieDB> 
 MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
 Query 10. Compute average number of distinct shows watched per day by genre in the week 2010-01-01
-Time: 19578ms, #results: 24
+Time: 11751ms, #results: 154
 
 MiniMovieDB> 
 MiniMovieDB> 
 MiniMovieDB> 
 MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
 Query 11. Compute average load (#playback events) by hour in the week of 2010-01-01
-Time: 13275ms, #results: 24
+Time: 10970ms, #results: 24
 
 MiniMovieDB> 
 MiniMovieDB> 
@@ -677,15 +540,15 @@ MiniMovieDB>
 MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... Uncaught MongoCursorExhaustedError: Cursor is exhausted
 MiniMovieDB> 
 MiniMovieDB> 
-MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
-Query 15. Recommend shows to user "5104" based on number of tag (with > 0.95 relevance) matches with 5-rated shows
-Time: 3652ms, #results: 8879
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
+Query 14. Recommend shows to user "5104" based on number of tag (with > 0.95 relevance) matches with 5-rated shows
+Time: 2248ms, #results: 3128
 
 MiniMovieDB> 
-MiniMovieDB> ... ... ... 
 MiniMovieDB> 
 MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
-Query 16. Recommend shows to user "5104" based on number of watches by users with similar taste
-Time: 69520ms, #results: 24640
+Query 15. Recommend shows to user "5104" based on number of watches by users with similar taste
+Time: 68294ms, #results: 24640
 
 MiniMovieDB> 
