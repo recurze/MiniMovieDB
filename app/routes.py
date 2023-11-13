@@ -8,6 +8,7 @@ from fastapi import (
 from fastapi.encoders import jsonable_encoder
 from pymongo.errors import DuplicateKeyError
 from typing import List
+import re
 
 
 show_router = APIRouter()
@@ -41,10 +42,66 @@ def find_show_by_id(id: str, request: Request):
 
 @show_router.get("/search/{title}", response_description="Get shows by title", response_model=List)
 def find_show_by_title(title: str, request: Request):
-    filter = {"primaryTitle": title}
+    if title == "\"\"":
+        filter = {}
+    elif title.startswith('"'):
+        filter = {"primaryTitle": title[1: -1]}
+    else:
+        filter = {"primaryTitle": re.compile(title, re.IGNORECASE)}
+
+    sort = []
     if request.query_params:
-        if request.query_params.get("genres", ""):
+        if request.query_params.get("genres"):
             filter["genres"] = {"$all": request.query_params["genres"].split(',')}
-    if (shows := request.app.database["shows"].find(filter)) is not None:
+        if request.query_params.get("titleType"):
+            filter["titleType"] = request.query_params["titleType"]
+        if request.query_params.get("start"):
+            filter["startYear"] = int(request.query_params["start"])
+
+        sortby = request.query_params.get("sortby", "")
+        if sortby == "ratings":
+            sort = [("averageRatings", -1)]
+        elif sortby == "popularity":
+            sort = [("numVotes", -1)]
+
+    if (shows := request.app.database["shows"].find(filter=filter, sort=sort)) is not None:
+        return shows.limit(30)
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Show with title {title} not found")
+
+
+@show_router.get("/showsby/{name}", response_description="Get shows by person", response_model=List)
+def find_show_by_person(name: str, request: Request):
+    pipeline = [
+        {
+            "$match": {
+                "name": name
+            }
+        },
+        {
+            "$unwind": "$knownFor"
+        },
+        {
+            "$lookup": {
+                "from": "shows",
+                "localField": "knownFor",
+                "foreignField": "_id",
+                "as": "show_info"
+            }
+        },
+        {
+            "$project": {
+                "_id": "$show_info._id",
+                "primaryTitle": "$show_info.primaryTitle",
+                "genres": "$show_info.genres",
+                "startYear": "$show_info.startYear",
+                "plot": "$show_info.plot",
+                "titleType": "$show_info.titleType",
+                "averageRating": "$show_info.averageRating",
+                "numVotes": "$show_info.numVotes",
+            }
+        }
+    ]
+
+    if (shows := request.app.database["people"].aggregate(pipeline)) is not None:
         return shows
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Show with title {title} not found")

@@ -10,8 +10,7 @@
 <body>
 
 <div class="container mt-4">
-    <h2>Movie Filter</h2>
-    <!-- Filter Form -->
+    <h2>Show Filter</h2>
     <form id="filterForm">
         <div class="form-group">
             <label for="title">Title:</label>
@@ -21,38 +20,125 @@
             <label for="genre">Genre:</label>
             <input type="text" class="form-control" id="genre" placeholder="Enter genre">
         </div>
+        <div class="form-group">
+            <label for="start">Start Year:</label>
+            <input type="text" class="form-control" id="start" placeholder="Enter start year">
+        </div>
+        <div class="form-group">
+            <label for="titleType">Title Type:</label>
+            <select class="form-control" id="titleType">
+                <option>movie</option>
+                <option>short</option>
+                <option>tvSeries</option>
+                <option>tvEpisode</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="sortby">Sort By</label>
+            <select class="form-control" id="sortby">
+                <option>none</option>
+                <option>ratings</option>
+                <option>popularity</option>
+            </select>
+        </div>
         <button type="button" class="btn btn-primary" onclick="filterMovies()">Filter</button>
     </form>
-    <!-- Display Filtered Movies -->
     <div id="filteredMovies" class="mt-4"></div>
+</div>
+
+<div class="container mt-4">
+    <h2>Shows by:</h2>
+    <form id="filterForm">
+        <div class="form-group">
+            <input type="text" class="form-control" id="name" placeholder="Enter name">
+        </div>
+        <button type="button" class="btn btn-primary" onclick="findShows()">Filter</button>
+    </form>
+    <div id="foundShows" class="mt-4"></div>
 </div>
 
 <script>
     async function filterMovies() {
         const title = document.getElementById('title').value;
         const genre = document.getElementById('genre').value;
+        const titleType = document.getElementById('titleType').value;
+        const start = document.getElementById('start').value;
+        const sortby = document.getElementById('sortby').value;
 
         // Call FastAPI endpoint to filter movies
-        const response = await fetch(`/show/search/${title}?genres=${genre}`);
+        const response = (title !== "") ? await fetch(`/show/search/${title}?genres=${genre}&start=${start}&sortby=${sortby}&titleType=${titleType}`) : await fetch(`/show/search/""?genres=${genre}&start=${start}&sortby=${sortby}&titleType=${titleType}`);
         const movies = await response.json();
         console.log(movies)
 
         // Display filtered movies
         const filteredMoviesDiv = document.getElementById('filteredMovies');
-        filteredMoviesDiv.innerHTML = '<h4>Filtered Movies</h4>';
+        filteredMoviesDiv.innerHTML = '<h4>Show List</h4>';
         if (movies.length === 0) {
             filteredMoviesDiv.innerHTML += '<p>No movies found.</p>';
         } else {
             const movieList = document.createElement('ul');
             movies.forEach(movie => {
+                const listItem = document.createElement('li');
+
                 const a = document.createElement('a');
                 a.href = 'https://imdb.com/title/' + `${movie._id}`
                 a.textContent = `${movie.primaryTitle} (${movie.titleType}, ${movie.startYear}) - ${movie.genres.join(', ')}`;
-                const listItem = document.createElement('li');
+                rating = `${movie.averageRating}`;
+                votes = `${movie.numVotes}`;
+                if (rating !== 'undefined') {
+                    a.textContent += ` | ${movie.averageRating}/10.0 by ${movie.numVotes} users`;
+                }
                 listItem.appendChild(a)
+
+                plot = `${movie.plot}`
+                if (plot !== 'undefined') {
+                    const paragraph = document.createElement('p');
+                    paragraph.textContent = plot
+                    listItem.appendChild(paragraph)
+                }
                 movieList.appendChild(listItem);
             });
             filteredMoviesDiv.appendChild(movieList);
+        }
+    }
+
+    async function findShows() {
+        const name = document.getElementById('name').value;
+
+        // Call FastAPI endpoint to filter movies
+        const response = await fetch(`/show/showsby/${name}`);
+        const movies = await response.json();
+        console.log(movies)
+
+        // Display filtered movies
+        const foundShowsDiv = document.getElementById('foundShows');
+        foundShowsDiv.innerHTML = '<h4>Show List</h4>';
+        if (movies.length === 0) {
+            foundShowsDiv.innerHTML += '<p>No movies found.</p>';
+        } else {
+            const movieList = document.createElement('ul');
+            movies.forEach(movie => {
+                const listItem = document.createElement('li');
+
+                const a = document.createElement('a');
+                a.href = 'https://imdb.com/title/' + `${movie._id}`
+                a.textContent = `${movie.primaryTitle} (${movie.titleType}, ${movie.startYear}) - ${movie.genres.join(', ')}`;
+                rating = `${movie.averageRating}`;
+                votes = `${movie.numVotes}`;
+                if (rating !== 'undefined') {
+                    a.textContent += ` | ${movie.averageRating}/10.0 by ${movie.numVotes} users`;
+                }
+                listItem.appendChild(a)
+
+                plot = `${movie.plot}`
+                if (plot !== 'undefined') {
+                    const paragraph = document.createElement('p');
+                    paragraph.textContent = plot
+                    listItem.appendChild(paragraph)
+                }
+                movieList.appendChild(listItem);
+            });
+            foundShowsDiv.appendChild(movieList);
         }
     }
 </script>
