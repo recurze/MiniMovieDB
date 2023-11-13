@@ -32,6 +32,7 @@ function createIndices() {
     db.people.createIndex({"name": 1});
     db.user_events.createIndex({"userId": 1});
     db.user_events.createIndex({"eventType": 1});
+    db.user_ratings.createIndex({"userId": 1});
     db.user_ratings.createIndex({"imdbId": 1});
 }
 
@@ -137,7 +138,6 @@ runQuery(function() {
 }, "5. List shows with at least one of user's preference from each category", "aggregate");
 
 
-// I don't know what the query wants
 runQuery(function() {
     return db.shows.aggregate([
         {
@@ -168,6 +168,23 @@ runQuery(function() {
         },
         {
             $limit: 1
+        },
+        {
+            $lookup: {
+                from: "shows",
+                localField: "_id",
+                foreignField: "parentId",
+                as: "episodes"
+            }
+        },
+        {
+            $unwind: "$episodes"
+        },
+        {
+            $sort: {
+                seasonNumber: 1,
+                episodeNumber: 1,
+            }
         }
     ]).toArray();
 }, "6. Find all the episodes of the show with the greatest number of episodes where the episode primary title, season number and episode number are all known, in chronological order.", "aggregate");
@@ -641,7 +658,171 @@ runQuery(function() {
     ]).toArray();
 }, "13. Compute average budget by currency for shows (numRatings > 100, avgRating > 4)", "aggregate");
 
-/*
-15. The company would like to provide content-based recommendations to individual user by finding shows similar to those rated highly by the user. Define the user’s genome tag preference to be genome tag with a relevance of greater than 0.95 to at least one of the shows with a rating of 5 given by user. Recommend shows with a relevance of at least 0.95 to at least one of the genome tag preferences of the user with userId `5104`, in descending order of the number of genome tag preference matches.
-16. The company would like to provide user-based recommendations to individual user by finding shows rated highly by the users similar to the user. Define users to be similar if there is at least one show rated by both users with a rating of 5. Recommend shows rated by users similar to user with userId `5104` with a rating of 5 in descending order of the number of similar users matches.
-*/
+runQuery(function() {
+    return db.shows.aggregate([
+        {
+            $unwind: "$tags"
+        },
+        {
+            $match: {
+                "tags.relevance": {
+                    $gt: 0.95
+                }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                "id": "$_id",
+                "tag": "$tags.tag"
+            }
+        },
+        {
+            $out: "show_tags"
+        }
+    ]).toArray();
+}, "temp collection", "aggregate");
+
+
+runQuery(function() {
+    return db.user_ratings.aggregate([
+        {
+            $match: {
+                "userId": 5104,
+                "rating": 5.0,
+            }
+        },
+        {
+            $lookup: {
+                from: "show_tags",
+                localField: "imdbId",
+                foreignField: "id",
+                as: "tag_info"
+            }
+        },
+        {
+            $unwind: "$tag_info"
+        },
+        {
+            $lookup: {
+                from: "show_tags",
+                localField: "tag_info.tag",
+                foreignField: "tag",
+                as: "recommendation"
+            }
+        },
+        {
+            $unwind: "$recommendation"
+        },
+        {
+            $match: {
+                $expr: {
+                    $ne: ["$imdbId", "$recommendation.id"]
+                },
+            }
+        },
+        {
+            $group: {
+                _id: "$recommendation.id"
+                numTagMatches: {
+                    $sum: 1
+                }
+            }
+        },
+        {
+            $sort: {
+                numTagMatches: -1
+            }
+        },
+        {
+            $lookup: {
+                from: "shows",
+                localField: "_id",
+                foreignField: "_id",
+                as: "recommended"
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                id: "$watched.primaryTitle",
+                recommendation: "$recommended.primaryTitle",
+                recommendation_plot: "$recommended.plot",
+                recommendation_genre: "$recommended.genres",
+            }
+        },
+    ]).toArray();
+}, "15. Recommend shows to user \"5104\" based on number of tag (with > 0.95 relevance) matches with 5-rated shows", "aggregate");
+
+
+runQuery(function() {
+    return db.user_ratings.aggregate([{
+            $match: {
+                "userId": 5104,
+                "rating": 5.0,
+            }
+        },
+        {
+            $lookup: {
+                from: "user_ratings",
+                localField: "imdbId",
+                foreignField: "imdbId",
+                as: "fellow_cultured_person"
+            }
+        },
+        {
+            $unwind: "$fellow_cultured_person"
+        },
+        {
+            $match: {
+                "fellow_cultured_person.rating": 5.0
+            }
+        },
+        {
+            $lookup: {
+                from: "user_ratings",
+                localField: "fellow_cultured_person.userId",
+                foreignField: "userId",
+                as: "recommended_shows"
+            }
+        },
+        {
+            $unwind: "$recommended_shows"
+        },
+        {
+            $match: {
+                "recommended_shows.rating": 5.0
+            }
+        },
+        {
+            $group: {
+                _id: "$recommended_shows.imdbId",
+                numSimilarUsersWatched: {
+                    $sum: 1
+                }
+            }
+        },
+        {
+            $sort: {
+                numSimilarUsersWatched: -1
+            }
+        },
+        {
+            $lookup: {
+                from: "shows",
+                localField: "_id",
+                foreignField: "_id",
+                as: "recommended"
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                id: "$watched.primaryTitle",
+                recommendation: "$recommended.primaryTitle",
+                recommendation_plot: "$recommended.plot",
+                recommendation_genre: "$recommended.genres"
+            }
+        }
+    ]).toArray();
+}, "16. Recommend shows to user \"5104\" based on number of watches by users with similar taste", "aggregate");

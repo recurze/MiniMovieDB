@@ -232,20 +232,13 @@ MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ...
 ]
 
 Query 5. List shows with at least one of user's preference from each category
-Time: 27102ms, #results: 1
+Time: 25121ms, #results: 1
 
 MiniMovieDB> 
 MiniMovieDB> 
-MiniMovieDB> 
-MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... [
-  {
-    _id: 'tt0058796',
-    count: 14729
-  }
-]
-
+MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
 Query 6. Find all the episodes of the show with the greatest number of episodes where the episode primary title, season number and episode number are all known, in chronological order.
-Time: 9259ms, #results: 1
+Time: 20632ms, #results: 14729
 
 MiniMovieDB> 
 MiniMovieDB> 
@@ -678,8 +671,21 @@ MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ...
 ]
 
 Query 13. Compute average budget by currency for shows (numRatings > 100, avgRating > 4)
-Time: 17365ms, #results: 11
+Time: 18031ms, #results: 11
+
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... Uncaught MongoCursorExhaustedError: Cursor is exhausted
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
+Query 15. Recommend shows to user "5104" based on number of tag (with > 0.95 relevance) matches with 5-rated shows
+Time: 3652ms, #results: 8879
 
 MiniMovieDB> 
 MiniMovieDB> ... ... ... 
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
+Query 16. Recommend shows to user "5104" based on number of watches by users with similar taste
+Time: 69520ms, #results: 24640
+
 MiniMovieDB> 
