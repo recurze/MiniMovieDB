@@ -1,3 +1,4 @@
+import ast
 import json
 import math
 import os
@@ -114,15 +115,24 @@ def shows_flat_attributes():
 
 
 def shows_list_attributes():
+    def load_taglines():
+        filepath = pathlib.PurePath("data", "misc", "plots.csv")
+        df = pd.read_csv(filepath, delimiter=',', quotechar='"').set_index("tconst")
+        df = df[~pd.isnull(df.taglines)]
+        def clean(s):
+            s = s.strip()
+            return s[1: -1] if s[0] == '"' or s[0] == "'" else s
+        return df.taglines.map(lambda x: [clean(i) for i in ast.literal_eval(x)]).rename_axis("_id")
+
     def load_genres():
         filepath = pathlib.PurePath("data", "imdb", "title.basics.tsv")
         df = read_csv(filepath).set_index("tconst")
         return df["genres"].fillna("").map(lambda x: x.split(','))
 
     def load_akas():
-        filepath = pathlib.PurePath("data", "imdb", "title.akas")
-        df = read_csv(filepath)[["titleId", "ordering", "title"]].sort_values("ordering")
-        df = df.groupby("titleId").title.agg(lambda x: x.tolist())
+        filepath = pathlib.PurePath("data", "imdb", "title.akas.tsv")
+        df = read_csv(filepath)[["titleId", "title"]]
+        df = df.groupby("titleId").title.agg(lambda x: list(set(x.tolist())))
         return df.rename("aka")
 
     def load_tags():
@@ -138,7 +148,7 @@ def shows_list_attributes():
         df_tags = df_tags.join(df_tagnames, on="tagId").join(df_links, on="movieId")
 
         df_tags = df_tags[["imdbId", "tag", "relevance"]].sort_values(["imdbId", "relevance"], ascending=False)
-        df_tags = df_tags.groupby("imdbId")[["tag", "relevance"]].agg(lambda x: x.tolist()[:20])
+        df_tags = df_tags.groupby("imdbId")[["tag", "relevance"]].agg(lambda x: x.tolist())
 
         df_tags["tags"] = list(
             [{"tag": tag, "relevance": relevance} for tag, relevance in zip(x, y)]
@@ -182,10 +192,13 @@ def shows_list_attributes():
             load_genres(),
             load_akas()
         ),
-        load_tags()
+        join_series(
+            load_taglines(),
+            load_tags()
+        )
     ).rename_axis("_id").reset_index(level=0)
 
-    for col in ["genres", "aka", "tags"]:
+    for col in ["genres", "aka", "tags", "taglines"]:
         merged[col] = merged[col].map(lambda x: x if isinstance(x, list) else [])
 
     outfile = pathlib.PurePath("collections", "shows.json")

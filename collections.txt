@@ -5,37 +5,42 @@ https://www.mongodb.com/developer/products/mongodb/mongodb-schema-design-best-pr
     - birth
     - death
     - profession
-    - known for (list shows)
+    - knownFor (list shows)
 * shows
-    - title
-    - start
-    - end
+    - primaryTitle
+    - startYear
+    - endYear
     - runtime
     - isAdult
     - genres (list str)
     - aka (list str)
+    - taglines (list str)
 
     - plot
-    - tags (list str)
+    - tags (list (str, relevance))
 
     - actors (list)
         + peopleId
         + character list
-    - people (list)
+    - crew (list)
         + peopleId
         + job
 
-    - ratings
+    - averageRating
     - numVotes
+
+    - seasonNumber
+    - episodeNumber
+    - parentId (show)
 * user_ratings:
-    - user_id
+    - userId
     - imdbId
     - rating
     - timestamp
 * user_events:
-    - user_id
-    - session id
+    - userId
+    - sessionId
     - imdbId
-    - event type
+    - eventType
     - timestamp
-    - playbackEndTimestamp (for type = playback only)
+    - timestampEnd (for type = playback only)
