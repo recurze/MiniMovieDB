@@ -1,0 +1,973 @@
+\documentclass[10pt,titlepage]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage[colorlinks]{hyperref}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\title{
+    \textsc{\LARGE National University of Singapore}\\[1cm]
+    \textsc{\Large DSA5104: Group 20}\\[2cm]
+
+
+    \HRule\\[0.4cm]
+    \huge{Comparative Analysis of ``MiniMovieDB" implementations in MySQL, NEO4J and MongoDB}
+    \HRule\\[1.5cm]
+}
+
+\author{\begin{tabular}{rl}
+        Ng Wei Xiang & \\
+        Rahul Venkatesh & \\
+        Wang YiChen & \\
+        Yong Zhu Cheng & 
+\end{tabular}}
+\date{\vfill\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\pagebreak
+
+\section{Introduction}
+\section{Business Context}
+\section{Project Goals}
+We aim to simulate a database system that supports essential product and analysis needs for a hypothetical video streaming service, such as the likes of Netflix, Disney+ and Prime Video.
+
+The following are the key use cases we aim to support through our database:
+
+\begin{itemize}
+  \item General business use. Relevant use cases include but are not limited to business reporting and production planning
+
+  \item User search with custom filters. For example, users may search for shows of specific genres or movies featuring specific actors
+
+  \item Recommender system for users. The database aims to support both rulesbased and machine learning-based recommenders
+
+\end{itemize}
+
+\section{Understanding Our Data}
+\section{Overview}
+From first principles, our data needs to support the analysis of user preferences based on show information and user activity. As such, we require the following:
+
+\begin{itemize}
+  \item A dataset that provides a wide range of TV shows, along with relevant metadata and provenance information
+
+  \item A dataset that provides sufficient information about user activity, preferences, and/or other relevant details. As detailed user information is difficult to obtain online, we focus instead on anonymized user activity, where apt and permissible.
+
+\end{itemize}
+
+As a baseline, we also require that the datasets satisfy the following conditions:
+
+\begin{itemize}
+  \item To be of sufficient volume and complexity
+
+  \item To comprise sufficient attributes for rich analysis
+
+  \item To allow linkages between movie information and user data
+
+\end{itemize}
+
+
+We have thus decided to use the following datasets for the project:
+
+\begin{itemize}
+  \item IMDb Non-Commercial Dataset:
+
+  \item A list of shows and movies with a wide range of insightful features, such as genre information and cast \& crew details
+
+\end{itemize}
+
+Download link: \href{https://developer.imdb.com/non-commercial-datasets/}{https://developer.imdb.com/non-commercial-datasets/}
+
+\begin{itemize}
+  \item Movielens 25M Dataset:
+\end{itemize}
+
+Historical records of tagging and rating activity by users, with genre information and analysis of tag relevance. Comes with show identifiers based on the IMDb dataset, as well as user identifiers
+
+\section{Data Structure}
+The following section details the data structures of the respective datasets, organized by domain. Featured details include data attributes and types.
+
+\section{IMDb Non-Commercial Dataset}
+Shows (title.basics.tsv.gz)
+
+This domain contains essential information about all shows covered by this dataset.
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Attribute & Data Type & Definition \\
+\hline
+tconst & string & an alphanumeric unique identifier of the title \\
+\hline
+titleType & string & \begin{tabular}{l}
+the type/format of the title (e.g. movie, short, \\
+tvseries, tvepisode, video, etc) \\
+\end{tabular} \\
+\hline
+primaryTitle & string & \begin{tabular}{l}
+the more popular title / the title used by the \\
+filmmakers on promotional materials at the point of \\
+release \\
+\end{tabular} \\
+\hline
+originalTitle & string & original title, in the original language \\
+\hline
+isAdult & integer & 0: non-adult title; 1 : adult title \\
+\hline
+startYear & integer & \begin{tabular}{l}
+represents the release year of a title. In the case \\
+of TV Series, it is the series start year \\
+\end{tabular} \\
+\hline
+endYear & integer & TV Series end year. 'W' for all other title types \\
+\hline
+runtimeMinutes & integer & primary runtime of the title, in minutes \\
+\hline
+genres & integer & \begin{tabular}{l}
+includes up to three genres associated with the \\
+title \\
+\end{tabular} \\
+\hline
+\end{tabular}
+\end{center}
+
+Alternative Titles (title.akas.tsv.gz)
+
+This domain contains the alternative titles of shows. For example, different versions of the same movie title may be used in different regions.
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Attribute & Data Type & Definition \\
+\hline
+titleld & string & \begin{tabular}{l}
+an alphanumeric unique identifier of the title, i.e. \\
+tconst \\
+\end{tabular} \\
+\hline
+ordering & integer & a number to uniquely identify rows for a given titleld \\
+\hline
+title & string & the localized title \\
+\hline
+region & string & the region for this version of the title \\
+\hline
+language & string & the language of the title \\
+\hline
+types & array & \begin{tabular}{l}
+Enumerated set of attributes for this alternative title. \\
+One or more of the following: "alternative", "dvd", \\
+"festival", "tv", "video", "working", "original", \\
+"imdbDisplay". New values may be added in the \\
+future without warning \\
+\end{tabular} \\
+\hline
+attributes & array & \begin{tabular}{l}
+Additional terms to describe this alternative title, not \\
+enumerated \\
+\end{tabular} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+is OriginalTitle & integer & 0: not original title; 1 : original title \\
+\hline
+\end{tabular}
+\end{center}
+
+Crew (title.crew.tsv.gz)
+
+This domain contains the director(s) and writer(s) involved in every show.
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Attribute & Data Type & Definition \\
+\hline
+tconst & string & an alphanumeric unique identifier of the title \\
+\hline
+directors & array & director(s) of the given title \\
+\hline
+writers & array & writer(s) of the given title \\
+\hline
+\end{tabular}
+\end{center}
+
+Episode (title.episode.tsv.gz)
+
+This domain contains the episodes belonging to every TV series
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Attribute & Data Type & Definition \\
+\hline
+tconst & string & an alphanumeric unique identifier of the episode \\
+\hline
+parentTconst & string & alphanumeric identifier of the parent TV Series \\
+\hline
+seasonNumber & integer & season number the episode belongs to \\
+\hline
+episodeNumber & integer & episode number of the tconst in the TV series \\
+\hline
+\end{tabular}
+\end{center}
+
+Ratings (title.ratings.tsv.gz)
+
+This domain contains information about IMDb ratings received by listed titles
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Attribute & Data Type & Definition \\
+\hline
+tconst & string & an alphanumeric unique identifier of the title \\
+\hline
+averageRating & float & weighted average of all the individual user ratings \\
+\hline
+numVotes & integer & number of votes the title has received \\
+\hline
+\end{tabular}
+\end{center}
+
+Principals (title.principals.tsv.gz)
+
+This domain contains show-level information about the key personnel involved in the making of every show.
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Attribute & Data Type & Definition \\
+\hline
+tconst & string & an alphanumeric unique identifier of the title \\
+\hline
+ordering & integer & a number to uniquely identify rows for a given titleld \\
+\hline
+nconst & string & alphanumeric unique identifier of the name/person \\
+\hline
+category & string & the category of job that person was in \\
+\hline
+job & string & the specific job title if applicable, else 'IN' \\
+\hline
+characters & arrays & \begin{tabular}{l}
+the names of the characters played if applicable, else \\
+'IN' \\
+\end{tabular} \\
+\hline
+\end{tabular}
+\end{center}
+
+Personnel (name.basics.tsv.gz)
+
+This domain contains personnel-level information about the people covered in this dataset.
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Attribute & Data Type & Definition \\
+\hline
+nconst & string & \begin{tabular}{l}
+an alphanumeric unique identifier of the \\
+name/person \\
+\end{tabular} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+primaryName & string & \begin{tabular}{l}
+name by which the person is most often \\
+credited \\
+\end{tabular} \\
+\hline
+birthYear & integer & in YYYY format \\
+\hline
+deathYear & integer & in YYYY format if applicable, else 'IN' \\
+\hline
+primaryProfession & array & the top 3 professions of the person \\
+\hline
+knownforTitles & array & titles the person is known for \\
+\hline
+\end{tabular}
+\end{center}
+
+
+Ratings (ratings.csv)
+
+This domain contains records of movie ratings by anonymized users.
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Attribute & Data Type & Definition \\
+\hline
+userld & integer & an alphanumeric unique identifier of a user \\
+\hline
+movield & integer & a unique identifier of a movie, as set by MovieLens \\
+\hline
+rating & float & \begin{tabular}{l}
+rating given by user. Made on a 5-star scale with half- \\
+star increments \\
+\end{tabular} \\
+\hline
+timestamp & integer & \begin{tabular}{l}
+Timestamp of rating record. Represents seconds \\
+since midnight of January 1, 1970 in UTC time \\
+\end{tabular} \\
+\hline
+\end{tabular}
+\end{center}
+
+Tags (tags.csv)
+
+This domain contains records of movie tags cast by anonymized users. A tag can be any word or short phrase that the user deems as relevant to the movie, e.g. 'funny', 'horror movie', etc.
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Attribute & Data Type & Definition \\
+\hline
+userld & integer & an alphanumeric unique identifier of a user \\
+\hline
+movield & integer & a unique identifier of a movie, as set by Movielens \\
+\hline
+tag & string & \begin{tabular}{l}
+user-generated metadata about the movie. The \\
+meaning, value and purpose of a tag is determined \\
+by each user. A user can cast multiple tags \\
+\end{tabular} \\
+\hline
+timestamp & integer & \begin{tabular}{l}
+Timestamp of tagging record. Represents seconds \\
+since midnight of January 1, 1970 in UTC time \\
+\end{tabular} \\
+\hline
+\end{tabular}
+\end{center}
+
+Movies:
+
+(movies.csv)
+
+This table contains basic information about each covered movie.
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Attribute & Data Type & Definition \\
+\hline
+movield & integer & a unique identifier of a movie, as set by Movielens \\
+\hline
+title & string & \begin{tabular}{l}
+title of movie. Includes release year in parentheses at \\
+the end of the title \\
+\end{tabular} \\
+\hline
+genre & string & \begin{tabular}{l}
+pipe-separated list of genres that best characterize \\
+the movie \\
+\end{tabular} \\
+\hline
+\end{tabular}
+\end{center}
+
+(links.csv)
+
+This table relates the Movielens movie identifiers to the IMDb identifiers.
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+Attribute & Data Type & Definition \\
+\hline
+movield & integer & a unique identifier of a movie, as set by Movielens \\
+\hline
+imdbld & string & \begin{tabular}{l}
+a unique alphanumeric identifier of the movie, as set \\
+by IMDb. Corresponds to tconst \\
+\end{tabular} \\
+\hline
+tmdbld & string & \begin{tabular}{l}
+a unique identifier of the movie, as set by \\
+themoviedb.org. \\
+Note that this identifier, while available in the raw \\
+data, is not used for any purposes in this project \\
+\end{tabular} \\
+\hline
+\end{tabular}
+\end{center}
+
+Tag Genomes:
+
+(genome-scores.csv)
+
+This table breaks down the tag relevance scores for every movie. Each row represents one tag for a particular movie. A movie can have multiple tags, and vice versa. Conceptually, the tag genome is a data structure that encodes how much movies embody and reflect their assigned tags.
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+Attribute & Data Type & Definition \\
+\hline
+movield & integer & a unique identifier of a movie, as set by Movielens \\
+\hline
+tagld & string & \begin{tabular}{l}
+a unique identifier of the tag assigned to the movie. \\
+tagld values are generated when the data set is \\
+exported, and thus vary from version to version of \\
+this dataset \\
+Note that the tags here are a subset of the tags \\
+recorded in tags.csv, and are henceforth referred to \\
+as 'genome tags' \\
+\end{tabular} \\
+\hline
+relevance & float & Relevance score of genome tag \\
+\hline
+\end{tabular}
+\end{center}
+
+(genome-tags.csv)
+
+This table relates tags to their respective identifiers.
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Attribute & Data Type & Definition \\
+\hline
+tagld & string & \begin{tabular}{l}
+a unique identifier of the genome tag assigned to the \\
+movie \\
+\end{tabular} \\
+\hline
+tag &  & the actual genome tag assigned \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Summary Statistics}
+IMDb Non-commercial Dataset
+
+\begin{center}
+\begin{tabular}{|l|l|l|l|}
+\hline
+Domain & Size & Volume (len) & Others \\
+\hline
+Shows & $175 \mathrm{MB}$ & 10270303 & startYear range: $1874-2031$ \\
+\hline
+Alternative Titles & $311 \mathrm{MB}$ & 37595404 &  \\
+\hline
+Crew & $67 \mathrm{MB}$ & 10270303 &  \\
+\hline
+Episodes & $42 \mathrm{MB}$ & 7830138 &  \\
+\hline
+Ratings & $7 \mathrm{MB}$ & 1363972 &  \\
+\hline
+Principals & $445 \mathrm{MB}$ & 58825877 &  \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|l|l|l|l|}
+\hline
+Personnel & 250MB & 12960142 &  \\
+\hline
+\end{tabular}
+\end{center}
+
+MovieLens Dataset
+
+\begin{center}
+\begin{tabular}{|l|l|l|l|}
+\hline
+Domain & Size & Volume (len) & Others \\
+\hline
+Ratings ${ }^{*}$ & $662 \mathrm{MB}$ & 25000095 & \begin{tabular}{l}
+User count: 162541 \\
+Date range: \\
+1995-01-09-2019-11-21 \\
+\end{tabular} \\
+\hline
+Tags & $38 \mathrm{MB}$ & 1093360 & \begin{tabular}{l}
+User count: 14592 \\
+Date range: \\
+2005-12-24-2019-11-21 \\
+\end{tabular} \\
+\hline
+Movies (movies.csv) & $3 \mathrm{MB}$ & 62423 &  \\
+\hline
+Movies (links.csv) & $1 \mathrm{MB}$ & 62423 &  \\
+\hline
+\begin{tabular}{l}
+Tag Genomes \\
+(genome- \\
+scores.csv) \\
+\end{tabular} & $425 \mathrm{MB}$ & 15584448 &  \\
+\hline
+\begin{tabular}{l}
+Tag Genomes \\
+(genome-tags.csv) \\
+\end{tabular} & $18 \mathrm{~KB}$ & 1128 &  \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Data Cleaning}
+We took the following steps to pre-process the above datasets:
+
+\section{Standardize Semantics}
+We standardized overlapping field names based on the following conventions, mostly for clarity and interpretability. For example, 'titles' is replaced by 'shows', while the ratings field in the IMDb dataset is prefixed with 'imdb':
+
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+Standardized Field Name & Original Field Name(s) \\
+\hline
+imdbld & \begin{tabular}{l}
+- tconst \\
+$\circ$ title.basics.tsv.gz \\
+$\circ$ title.crew.tsv.gz \\
+$\circ$ title.episode.tsv.gz \\
+$\circ$ title.principals.tsv.gz \\
+$\circ$ title.ratings.tsv.gz \\
+- parentTconst \\
+$\circ$ title.episode.tsv.gz \\
+- titleld \\
+$\circ$ title.akas.tsv.gz \\
+- imdbld \\
+$\circ$ links.csv \\
+\end{tabular} \\
+\hline
+showType & \begin{tabular}{l}
+- genres \\
+$\quad \circ \quad$ title.basics.tsv.gz \\
+\end{tabular} \\
+\hline
+aliasTypes & \begin{tabular}{c}
+- types \\
+$\circ$ title.akas.tsv.gz \\
+\end{tabular} \\
+\hline
+personld & \begin{tabular}{l}
+- nconst \\
+$\circ$ name.basics.tsv.gz \\
+\end{tabular} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+ & $\quad$ title.principals.tsv.gz \\
+\hline
+knownForShows & \begin{tabular}{l}
+- $\quad$ knownforTitles \\
+ name.basics.tsv.gz \\
+\end{tabular} \\
+\hline
+imdbAvgRating & \begin{tabular}{l}
+- averageRating \\
+$\quad 0$ title.ratings.tsv.gz \\
+\end{tabular} \\
+\hline
+genomeTagld &  \\
+\hline
+genomeTag & \begin{tabular}{l}
+- tag \\
+$\quad \circ$ genome-tags.csv \\
+\end{tabular} \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Process Timestamps}
+All timestamp values of user events have been cast in UTC time and presented in the ISO format: yyyy-mm-dd hh-mm-ss.
+
+\section{Process Arrays}
+There are multiple fields in the IMDb dataset with array values, such as genres, directors and writers. As they are each formatted differently in the raw data, we have processed these fields to accommodate the following cases:
+
+\begin{itemize}
+  \item Arrays formatted as strings delimited by ' $\mathrm{x} 02$ '
+
+  \item Arrays formatted as strings delimited by ', 'Specifically, some fields use double inverted commas for array elements while others use single inverted commas
+
+  \item Arrays formatted as strings delimited by ' 1 '
+
+\end{itemize}
+
+\section{Standardize Identifiers}
+To ensure that both datasets can be joined using imdbld, we reformatted the imdbld values in the MovieLens dataset into 'ttxxxxxxx' strings, where the last 7 characters are numerical digits, for consistency with the IMDb dataset.
+
+\section{Remove Placeholder Titles}
+In the IMDb dataset, many titles of TV show episodes have been written as "Episode \#\{seasonNumber\}.\{episodeNumber\}". Such titles do not provide any meaningful information beyond what is already captured by other data attributes, and unrelated TV shows may thus have identical titles, which could create some difficulties in data analysis. As such, we have elected to remove such values from the "primaryTitle" and "originalTitle" fields.
+
+\section{Data Generation}
+To enrich the above datasets with more information about our shows and users, we generated two additional datasets:
+
+Cinemagoer Dataset (shows.csv)
+
+We generated this dataset by calling the Cinemagoer API from the imdb package in Python, using the movies listed across both IMDb and Movielens datasets. It comprises supplementary information that could enrich our recommender system, such as plot, tagline, and budget information.
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Attribute & Data Type & Definition \\
+\hline
+imdbld & string & \begin{tabular}{l}
+unique alphanumeric identifier of a show. \\
+Consistent with 'tconst' in the IMDb dataset \\
+\end{tabular} \\
+\hline
+plot & string & summary of show plot \\
+\hline
+taglines & array & tagline of show \\
+\hline
+budgetAmount & integer & budget of show \\
+\hline
+budgetCurrency & string & currency symbol of show budget \\
+\hline
+\end{tabular}
+\end{center}
+
+User Events Dataset (user events.csv)
+
+We created a synthetic dataset with simulated user events to allow in-depth user analysis. User behaviour is a critical vector of analysis for the business, as user conversion, engagement and retention are key product and business objectives. As will be seen in our NL queries, this data is often analysed in conjunction with show information for important product insights. For convenience, we have used the rating and tagging records from the MovieLens dataset as a logical basis for event generation, while also merging them with our synthetic events for a comprehensive event log.
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+Attribute & Data Type & Definition \\
+\hline
+eventld & string & \begin{tabular}{l}
+unique identifier of an event. An event is a \\
+single activity performed by a user \\
+\end{tabular} \\
+\hline
+sessionld & string & \begin{tabular}{l}
+unique identifier of a session. A session is \\
+a sequence of events that happened in \\
+succession for one user. \\
+For example, a user may enter Netflix, \\
+scroll through a few movie options, and \\
+then watch one to completion. This \\
+constitutes one session. \\
+\end{tabular} \\
+\hline
+userld & integer & unique identifier of a user \\
+\hline
+imdbld & string & unique alphanumeric identifier of a show \\
+\hline
+eventType & string & \begin{tabular}{l}
+Type of event. Event types include: \\
+- $\quad$ 1-impression (when a page element, \\
+e.g. a movie thumbnail, is visible to a \\
+user) \\
+- 2-click (when a user clicks on any page \\
+element, e.g. a movie card) \\
+- 3-view (when a user views the opened \\
+page element, i.e. a movie info pop-up) \\
+- 4-playback (when a user watches a \\
+show) \\
+- 5 -rate (as per MovieLens) \\
+- 6-tag (as per MovieLens) \\
+\end{tabular} \\
+\hline
+timestamp & integer & \begin{tabular}{l}
+UTC timestamp of event. Timestamps for \\
+rating and tagging events are from the \\
+MovieLens dataset \\
+\end{tabular} \\
+\hline
+playbackEndTimestamp & integer & The time at which a user stops a show \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+rating & float & \begin{tabular}{l}
+The rating given by the user. Made on a 5- \\
+star scale with half-star increments. Taken \\
+from the MovieLens dataset \\
+\end{tabular} \\
+\hline
+tag & string & \begin{tabular}{l}
+user-generated metadata about the movie. \\
+Taken from the MovieLens dataset \\
+\end{tabular} \\
+\hline
+\end{tabular}
+\end{center}
+
+To efficiently generate a dataset that is reasonably illustrative of an actual event log for a video streaming service, while keeping the data size manageable, we observe the following principles and considerations in our logic:
+
+\begin{itemize}
+  \item Our userbase is the set of users in the MovieLens dataset.
+
+  \item Our event log is based on a simplified user journey, whereby users open the app $\rightarrow$ scroll through various thumbnails on the home or search page $\rightarrow$ click on the shows that may interest them $\rightarrow$ view the corresponding information pop-ups $\rightarrow$ and finally watch a show. As such, we have impressions, clicks, views and playbacks as the main event types, with their respective probabilities set as: $\mathrm{P}$ (impression) $>\mathrm{P}($ click $)>\mathrm{P}($ view $)>\mathrm{P}$ (playback).
+
+  \item To further mimic an actual event log, we grouped successive events together at random to form complete user sessions.
+
+  \item To limit data size, we restrict the shows that users have interacted with to the shows they have tagged and/or rated.
+
+  \item Furthermore, some constraints are in place for basic logical coherence. These include but are not limited to the following:
+
+  \item No 2 distinct user events of a user can overlap chronologically, such as when the playbackEndTimestamp of a previous playback event is greater than the timestamp of the current impression event for the same user.
+
+\end{itemize}
+
+ The 4 event types, if present, must take place before a user has tagged or rated the show
+
+Professionally, event logs are a much more complicated business. As such, we note that many details have indeed been omitted or simplified for the project. For example, session definitions are usually more precise (e.g. a session ends only when a user has been inactive for a certain amount of time). Many edge cases in user behaviour have not been accounted for (e.g. when users pause and play the same show multiple times), and tracked event types are in fact much more varied and diverse than the four we have generated.
+
+\section{Summary Statistics}
+\section{Cinemagoer Dataset}
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Size & Volume (len) & Others \\
+\hline
+$20 \mathrm{MB}$ & 62419 &  \\
+\hline
+\end{tabular}
+\end{center}
+
+ User Events Dataset
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Size & Volume (len) & Others \\
+\hline
+$4.12 G B$ & 72870860 & \begin{tabular}{l}
+User count: 162541 \\
+Date range: \\
+$1995-01-03-2019-11-21$ \\
+\end{tabular} \\
+\hline
+\end{tabular}
+\end{center}
+
+Each table represents a node in the graph, with the header, camel-cased starting with an uppercase character, denoting the label of the node. The properties of the node are listed as members of the table. For instance, a show would be represented as one node in the graph with the label 'Show'. The count statistics of each node label are as follows:
+
+\begin{center}
+\begin{tabular}{|l|c|l|c|}
+\hline
+\multicolumn{1}{|c|}{nodeLabel} & numberOfNodes & \multicolumn{1}{c|}{nodeLabel} & numberOfNodes \\
+\hline
+"Show" & $10,241,550$ & "Job" & $58,593,659$ \\
+\hline
+"Alias" & $69,120,540$ & "User" & 162,541 \\
+\hline
+"ShowType" & 11 & "JobCategory" & 12 \\
+\hline
+"Genre" & 30 & "Tag" & 73,050 \\
+\hline
+"Person" & $12,923,154$ & "Session" & 434,325 \\
+\hline
+"AliasType" & 8 & "GenomeTag" & 1,128 \\
+\hline
+"Region" & 247 & "Event" & $72,870,860$ \\
+\hline
+"Language" & 107 & "EventType" & 6 \\
+\hline
+"Profession" & 43 &  &  \\
+\hline
+\end{tabular}
+\end{center}
+
+Each arrow between the two tables represents a directed edge, otherwise known as an arc, between the corresponding nodes. The label of the arc is denoted along the arc in uppercase with an underscore separating the words, with its properties listed in bullet points. For instance, if a show has an alias, it would be represented as an arc from the 'Show' node representing that particular show to the 'Alias' node representing that particular alias. The count statistics of each arc label are as follows:
+
+\begin{center}
+\begin{tabular}{|l|c|l|c|}
+\hline
+\multicolumn{1}{|c|}{arcLabel} & numberOfArcs & \multicolumn{1}{c|}{arcLabel} & numberOfArcs \\
+\hline
+"IS\_GENRE" & $31,738,804$ & "DID\_JOB" & $117,187,318$ \\
+\hline
+"IS\_SHOW\_TYPE" & $20,464,630$ & "IS\_JOB\_CATEGORY" & $117,187,318$ \\
+\hline
+"AKA" & $74,967,224$ & "HAS\_PROFESSION" & $28,547,696$ \\
+\hline
+"HAS\_ALIAS\_TYPE" & $11,370,466$ & "KNOWN\_FOR\_SHOW" & $42,497,188$ \\
+\hline
+"FROM\_REGION" & $71,158,298$ & "HAS\_GENOME\_TAG" & $31,168,896$ \\
+\hline
+"IN\_LANGUAGE" & $61,425,630$ & "HAS\_SESSION" & 868,650 \\
+\hline
+"DIRECTED\_BY" & $15,570,102$ & "HAS\_EVENT" & $145,741,720$ \\
+\hline
+"WRITTEN\_BY" & $24,635,724$ & "INVOLVED\_SHOW" & $145,741,720$ \\
+\hline
+"HAS\_EPISODE" & $15,600,236$ & "IS\_EVENT\_TYPE" & $145,741,720$ \\
+\hline
+"OFFER\_JOB" & $117,187,318$ & "WITH\_TAG" & $2,186,688$ \\
+\hline
+\end{tabular}
+\end{center}
+
+Constraints are also added for robustness. The key constraints are added to property or a composite set of properties for each node type, denoted by an underline. These properties serve as an uniqueness and existence constraints for those nodes, akin to the primary keys concept in relational databases. For instance, creating a 'Show' node with the same 'imdbld' as another existing 'Show' node would result in an error because the 'imdbld must be unique across all 'Show' nodes. Creating a 'Show' node without \texttt{imdbld } would also be rejected as 'imdbld` is not nullable.
+
+\section*{Advantages}
+Similar to other non-relational databases such as MongoDB as described above, Neo4j does not require the data to be of the same structure. For instance, for an entity
+
+\section*{Database Access}
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+S/N & Query & Runtime (ms) \\
+\hline
+\multicolumn{3}{|c|}{DB Management} \\
+\hline
+1) & \begin{tabular}{l}
+The company has produced a new show. Add a new show with imdbld 'tt51045104', primaryTitle as \\
+'DSA5104 Project', and startYear as 2023. \\
+\end{tabular} & \begin{tabular}{l}
+MySQL: \\
+MongoDB: \\
+Neo4j: 91 \\
+\end{tabular} \\
+\hline
+2) & \begin{tabular}{l}
+The company needs to update a show that is ending. Update the show with imdbld \texttt{tt51045104} with \\
+endYear of 2023 \\
+\end{tabular} & \begin{tabular}{l}
+MySQL: \\
+MongoDB: 5 \\
+Neo4j: 11 \\
+\end{tabular} \\
+\hline
+\multicolumn{3}{|c|}{Customizable Search} \\
+\hline
+3) & \begin{tabular}{l}
+The user would like to search for a show named Pulp Fiction. List all shows with primary title \\
+containing case-insensitive 'pulp fiction\texttt{as a substring. \textbackslash \textbackslash  Expected columns: imdbld, primaryTitle, startYear, plot \textbackslash end\{tabular\} \& \textbackslash begin\{tabular\}\{l\}  MySQL: \textbackslash \textbackslash  MongoDB: 6182 \textbackslash \textbackslash  Neo4j: 37614 \textbackslash end\{tabular\} \textbackslash \textbackslash  \textbackslash hline 4) \& \textbackslash begin\{tabular\}\{l\}  The user forgot the title of the show but remembers a tagline "may the force be with you". Find the \textbackslash \textbackslash  show with a tagline containing case-insensitive 'may the force be with you' as a substring. \textbackslash \textbackslash  Expected columns: imdbld, primaryTitle, startYear, plot \textbackslash end\{tabular\} \& \textbackslash begin\{tabular\}\{l\}  MySQL: \textbackslash \textbackslash  MongoDB: 11146 \textbackslash \textbackslash  Neo4j: 7464 \textbackslash end\{tabular\} \textbackslash \textbackslash  \textbackslash hline 5) \& \textbackslash begin\{tabular\}\{l\}  The user has preferences as shown below. List the shows with at least one of the user's matching \textbackslash \textbackslash  preferences for each category. \textbackslash \textbackslash  - Genre: Adventure, Thriller \textbackslash \textbackslash  - Actor/actress: Cillian Murphy, Anne Hathaway \textbackslash \textbackslash  - Director: Quentin Tarantino, Christopher Nolan \textbackslash \textbackslash  Expected columns: imdbld, primaryTitle, startYear, plot \textbackslash end\{tabular\} \& \textbackslash begin\{tabular\}\{l\}  MySQL: \textbackslash \textbackslash  MongoDB: 34821 \textbackslash \textbackslash  Neo4j: 54387 \textbackslash end\{tabular\} \textbackslash \textbackslash  \textbackslash hline 6) \& \textbackslash begin\{tabular\}\{l\}  The user would like to indulge in a show with many episodes. Find all the episodes of the show with \textbackslash \textbackslash  the greatest number of episodes where the episode primary title, season number and episode \textbackslash \textbackslash  number are all known, in chronological order. \textbackslash \textbackslash  Expected columns: imdbld, primaryTitle, seasonNumber, episodeNumber \textbackslash end\{tabular\} \& \textbackslash begin\{tabular\}\{l\}  MySQL: \textbackslash \textbackslash  MongoDB: 18277 \textbackslash \textbackslash  Neo4j: 31545 \textbackslash end\{tabular\} \textbackslash \textbackslash  \textbackslash hline 7) \& \textbackslash begin\{tabular\}\{l\}  The user would like to retrieve its past activities. List all events of the last session of the user with \textbackslash \textbackslash  userld} 5104 in chronological order. \\
+Expected columns: sessionld, eventld, eventType, imdbld, timestamp \\
+\end{tabular} & \begin{tabular}{l}
+MySQL: \\
+MongoDB: 42490 \\
+Neo4j: 25 \\
+\end{tabular} \\
+\hline
+\multicolumn{3}{|c|}{Business Planning / Analysis: Inventory Planning} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+8) & \begin{tabular}{l}
+The company would like to manage its inventory by removing and adding shows. List 10 best and 10 \\
+worst shows rated at least 100 times, sorted by average rating. \\
+Expected columns: imdbld, primaryTitle, avgRating, numRating \\
+\end{tabular} & \begin{tabular}{l}
+MySQL: \\
+MongoDB: 16063 \\
+Neo4j: 420341 \\
+\end{tabular} \\
+\hline
+\multicolumn{3}{|c|}{Business Planning / Analysis: User Analysis} \\
+\hline
+9) & 
+ & \begin{tabular}{l}
+MySQL: \\
+MongoDB: 34319 \\
+Neo4j: 140713 \\
+\end{tabular} \\
+\hline
+10) & \begin{tabular}{l}
+The company would like to provide further details of the playback events in the dashboard by genre. \\
+For each genre, find the average number of distinct shows watched per day,compl aggregated over \\
+all users during week X (only considering events starting during week X). Cross-day playback events \\
+are attributed only to the first day. \\
+Expected columns: date, genre, avgNumShow \\
+\end{tabular} & \begin{tabular}{l}
+MySQL: \\
+MongoDB: 11751 \\
+Neo4j: 11702 \\
+\end{tabular} \\
+\hline
+11) & \begin{tabular}{l}
+The company would like to plan for the scaling of the server according to the user demand. Sort the \\
+hours of the day by playback counts in week X, in descending order. Cross-hour playback events are \\
+attributed to all hours. \\
+Expected columns: hour, numPlayback \\
+\end{tabular} & \begin{tabular}{l}
+MySQL: \\
+MongoDB: 10970 \\
+Neo4j: 2177 \\
+\end{tabular} \\
+\hline
+\multicolumn{3}{|c|}{Production Planning} \\
+\hline
+12) & \begin{tabular}{l}
+The company would like to look for two actors/actresses with good chemistry. Find the top 5 pairs of \\
+actors/actresses who worked together in greatest number of shows. \\
+Expected columns: personldA, primaryNameA, personldB, primaryNameB, numCollab \\
+\end{tabular} & \begin{tabular}{l}
+MySQL: \\
+MongoDB: 613365 \\
+Neo4j: 408597 \\
+\end{tabular} \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+13) & \begin{tabular}{l}
+The company would like to estimate a budget to produce a high-quality show. Find the average \\
+budget for each currency, for shows rated at least 100 times with an average rating of at least 4 . \\
+Expected columns: budgetCurrency, budgetAmount \\
+\end{tabular} & \begin{tabular}{l}
+MySQL: \\
+MongoDB: 18031 \\
+Neo4j: 296912 \\
+\end{tabular} \\
+\hline
+\multicolumn{3}{|c|}{Personalized Recommendations} \\
+\hline
+14) & \begin{tabular}{l}
+The company would like to provide content-based recommendations to individual user by finding \\
+shows similar to those rated highly by the user. \\
+Define the user's genome tag preference to be genome tag with a relevance of greater than 0.95 to at \\
+least one of the shows with a rating of 5 given by user. Recommend shows with a relevance of at \\
+least 0.95 to at least one of the genome tag preferences of the user with userld ' 5104 , in descending \\
+order of the number of genome tag preference matches. \\
+Expected columns: imdbld, primaryTitle, genomeTagMatches \\
+\end{tabular} & \begin{tabular}{l}
+MySQL: \\
+MongoDB: 2248 \\
+Neo4j: 19938 \\
+\end{tabular} \\
+\hline
+15) & \begin{tabular}{l}
+The company would like to provide user-based recommendations to individual user by finding shows \\
+rated highly by the users similar to the user. \\
+Define users to be similar if there is at least one show rated by both users with a rating of 5 . \\
+Recommend shows rated by users similar to user with userld ' 5104 ' with a rating of 5 in descending \\
+order of the number of similar users matches. \\
+Expected columns: imdbld, primaryTitle, similarUserMatches \\
+\end{tabular} & \begin{tabular}{l}
+MySQL: \\
+MongoDB: 68294 \\
+Neo4j: 219108 \\
+\end{tabular} \\
+\hline
+\end{tabular}
+\end{center}
+
+
+\end{document}
+
+\end{document}
