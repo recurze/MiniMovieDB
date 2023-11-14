@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Show Filter</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-4">
+    <h2>Show Filter</h2>
+    <form id="filterForm">
+        <div class="form-group">
+            <label for="title">Title:</label>
+            <input type="text" class="form-control" id="title" placeholder="Enter title">
+        </div>
+        <div class="form-group">
+            <label for="genre">Genre:</label>
+            <input type="text" class="form-control" id="genre" placeholder="Enter genre">
+        </div>
+        <div class="form-group">
+            <label for="start">Start Year:</label>
+            <input type="text" class="form-control" id="start" placeholder="Enter start year">
+        </div>
+        <div class="form-group">
+            <label for="titleType">Title Type:</label>
+            <select class="form-control" id="titleType">
+                <option>movie</option>
+                <option>short</option>
+                <option>tvSeries</option>
+                <option>tvEpisode</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="sortby">Sort By</label>
+            <select class="form-control" id="sortby">
+                <option>none</option>
+                <option>ratings</option>
+                <option>popularity</option>
+            </select>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="filterMovies()">Filter</button>
+    </form>
+    <div id="filteredMovies" class="mt-4"></div>
+</div>
+
+<div class="container mt-4">
+    <h2>Shows by:</h2>
+    <form id="filterForm">
+        <div class="form-group">
+            <input type="text" class="form-control" id="name" placeholder="Enter name">
+        </div>
+        <button type="button" class="btn btn-primary" onclick="findShows()">Get</button>
+    </form>
+    <div id="foundShows" class="mt-4"></div>
+</div>
+
+<div class="container mt-4">
+    <h2>Shows similar to:</h2>
+    <form id="filterForm">
+        <div class="form-group">
+            <input type="text" class="form-control" id="title_1" placeholder="Enter title">
+        </div>
+        <button type="button" class="btn btn-primary" onclick="recommendShows()">Recommend</button>
+    </form>
+    <div id="recommendedShows" class="mt-4"></div>
+</div>
+
+<div class="container mt-4">
+    <h2>Shows rated by user:</h2>
+    <form id="filterForm">
+        <div class="form-group">
+            <input type="text" class="form-control" id="userId" placeholder="Enter userId">
+        </div>
+        <div class="form-group">
+            <label for="sortby_list">Sort By</label>
+            <select class="form-control" id="sortby_list">
+                <option>alphabetical</option>
+                <option>ratings</option>
+                <option>timestamp</option>
+            </select>
+        </div>
+
+        <button type="button" class="btn btn-primary" onclick="userInfo()">Retrieve</button>
+    </form>
+    <div id="userRated" class="mt-4"></div>
+</div>
+
+<script>
+    function displayMovies(movies, element, tot_rating=10) {
+        // Display filtered movies
+        const div = document.getElementById(element);
+        div.innerHTML = '<h4>Show List</h4>';
+        if (movies.length === 0) {
+            div.innerHTML += '<p>No movies found.</p>';
+        } else {
+            const movieList = document.createElement('ul');
+            movies.forEach(movie => {
+                const listItem = document.createElement('li');
+
+                const a = document.createElement('a');
+                a.href = 'https://imdb.com/title/' + `${movie._id}`
+                a.textContent = `${movie.primaryTitle} (${movie.titleType}, ${movie.startYear}) - ${movie.genres.join(', ')}`;
+                rating = `${movie.averageRating}`;
+                votes = `${movie.numVotes}`;
+                if (rating !== 'undefined') {
+                    a.textContent += ` | ${movie.averageRating}/` + tot_rating + ` by ${movie.numVotes} users`;
+                }
+                listItem.appendChild(a)
+
+                plot = `${movie.plot}`
+                if (plot !== 'undefined') {
+                    const paragraph = document.createElement('p');
+                    paragraph.textContent = plot
+                    listItem.appendChild(paragraph)
+                }
+                movieList.appendChild(listItem);
+            });
+            div.appendChild(movieList);
+        }
+    }
+
+    async function filterMovies() {
+        const title = document.getElementById('title').value;
+        const genre = document.getElementById('genre').value;
+        const titleType = document.getElementById('titleType').value;
+        const start = document.getElementById('start').value;
+        const sortby = document.getElementById('sortby').value;
+
+        // Call FastAPI endpoint to filter movies
+        const response = (title !== "") ? await fetch(`/show/search/${title}?genres=${genre}&start=${start}&sortby=${sortby}&titleType=${titleType}`) : await fetch(`/show/search/""?genres=${genre}&start=${start}&sortby=${sortby}&titleType=${titleType}`);
+        const movies = await response.json();
+
+        displayMovies(movies, "filteredMovies");
+    }
+
+    async function findShows() {
+        const name = document.getElementById('name').value;
+
+        // Call FastAPI endpoint to filter movies
+        const response = await fetch(`/show/showsby/${name}`);
+        const movies = await response.json();
+
+        displayMovies(movies, "foundShows");
+    }
+
+
+    async function recommendShows() {
+        const title = document.getElementById('title_1').value;
+        console.log(title);
+
+        // Call FastAPI endpoint to filter movies
+        const response = await fetch(`/show/similarto/${title}`);
+        const movies = await response.json();
+
+        displayMovies(movies, "recommendedShows");
+    }
+
+
+    async function userInfo() {
+        const userId = document.getElementById('userId').value;
+        const sortby_list = document.getElementById('sortby_list').value;
+
+        // Call FastAPI endpoint to filter movies
+        const response = await fetch(`/show/user/${userId}?sortby=${sortby_list}`);
+        const movies = await response.json();
+
+        displayMovies(movies, "userRated", 5);
+    }
+
+</script>
+
+</body>
+</html>
