@@ -52,12 +52,76 @@
         <div class="form-group">
             <input type="text" class="form-control" id="name" placeholder="Enter name">
         </div>
-        <button type="button" class="btn btn-primary" onclick="findShows()">Filter</button>
+        <button type="button" class="btn btn-primary" onclick="findShows()">Get</button>
     </form>
     <div id="foundShows" class="mt-4"></div>
 </div>
 
+<div class="container mt-4">
+    <h2>Shows similar to:</h2>
+    <form id="filterForm">
+        <div class="form-group">
+            <input type="text" class="form-control" id="title_1" placeholder="Enter title">
+        </div>
+        <button type="button" class="btn btn-primary" onclick="recommendShows()">Recommend</button>
+    </form>
+    <div id="recommendedShows" class="mt-4"></div>
+</div>
+
+<div class="container mt-4">
+    <h2>Shows rated by user:</h2>
+    <form id="filterForm">
+        <div class="form-group">
+            <input type="text" class="form-control" id="userId" placeholder="Enter userId">
+        </div>
+        <div class="form-group">
+            <label for="sortby_list">Sort By</label>
+            <select class="form-control" id="sortby_list">
+                <option>alphabetical</option>
+                <option>ratings</option>
+                <option>timestamp</option>
+            </select>
+        </div>
+
+        <button type="button" class="btn btn-primary" onclick="userInfo()">Retrieve</button>
+    </form>
+    <div id="userRated" class="mt-4"></div>
+</div>
+
 <script>
+    function displayMovies(movies, element, tot_rating=10) {
+        // Display filtered movies
+        const div = document.getElementById(element);
+        div.innerHTML = '<h4>Show List</h4>';
+        if (movies.length === 0) {
+            div.innerHTML += '<p>No movies found.</p>';
+        } else {
+            const movieList = document.createElement('ul');
+            movies.forEach(movie => {
+                const listItem = document.createElement('li');
+
+                const a = document.createElement('a');
+                a.href = 'https://imdb.com/title/' + `${movie._id}`
+                a.textContent = `${movie.primaryTitle} (${movie.titleType}, ${movie.startYear}) - ${movie.genres.join(', ')}`;
+                rating = `${movie.averageRating}`;
+                votes = `${movie.numVotes}`;
+                if (rating !== 'undefined') {
+                    a.textContent += ` | ${movie.averageRating}/` + tot_rating + ` by ${movie.numVotes} users`;
+                }
+                listItem.appendChild(a)
+
+                plot = `${movie.plot}`
+                if (plot !== 'undefined') {
+                    const paragraph = document.createElement('p');
+                    paragraph.textContent = plot
+                    listItem.appendChild(paragraph)
+                }
+                movieList.appendChild(listItem);
+            });
+            div.appendChild(movieList);
+        }
+    }
+
     async function filterMovies() {
         const title = document.getElementById('title').value;
         const genre = document.getElementById('genre').value;
@@ -68,38 +132,8 @@
         // Call FastAPI endpoint to filter movies
         const response = (title !== "") ? await fetch(`/show/search/${title}?genres=${genre}&start=${start}&sortby=${sortby}&titleType=${titleType}`) : await fetch(`/show/search/""?genres=${genre}&start=${start}&sortby=${sortby}&titleType=${titleType}`);
         const movies = await response.json();
-        console.log(movies)
 
-        // Display filtered movies
-        const filteredMoviesDiv = document.getElementById('filteredMovies');
-        filteredMoviesDiv.innerHTML = '<h4>Show List</h4>';
-        if (movies.length === 0) {
-            filteredMoviesDiv.innerHTML += '<p>No movies found.</p>';
-        } else {
-            const movieList = document.createElement('ul');
-            movies.forEach(movie => {
-                const listItem = document.createElement('li');
-
-                const a = document.createElement('a');
-                a.href = 'https://imdb.com/title/' + `${movie._id}`
-                a.textContent = `${movie.primaryTitle} (${movie.titleType}, ${movie.startYear}) - ${movie.genres.join(', ')}`;
-                rating = `${movie.averageRating}`;
-                votes = `${movie.numVotes}`;
-                if (rating !== 'undefined') {
-                    a.textContent += ` | ${movie.averageRating}/10.0 by ${movie.numVotes} users`;
-                }
-                listItem.appendChild(a)
-
-                plot = `${movie.plot}`
-                if (plot !== 'undefined') {
-                    const paragraph = document.createElement('p');
-                    paragraph.textContent = plot
-                    listItem.appendChild(paragraph)
-                }
-                movieList.appendChild(listItem);
-            });
-            filteredMoviesDiv.appendChild(movieList);
-        }
+        displayMovies(movies, "filteredMovies");
     }
 
     async function findShows() {
@@ -108,39 +142,34 @@
         // Call FastAPI endpoint to filter movies
         const response = await fetch(`/show/showsby/${name}`);
         const movies = await response.json();
-        console.log(movies)
 
-        // Display filtered movies
-        const foundShowsDiv = document.getElementById('foundShows');
-        foundShowsDiv.innerHTML = '<h4>Show List</h4>';
-        if (movies.length === 0) {
-            foundShowsDiv.innerHTML += '<p>No movies found.</p>';
-        } else {
-            const movieList = document.createElement('ul');
-            movies.forEach(movie => {
-                const listItem = document.createElement('li');
-
-                const a = document.createElement('a');
-                a.href = 'https://imdb.com/title/' + `${movie._id}`
-                a.textContent = `${movie.primaryTitle} (${movie.titleType}, ${movie.startYear}) - ${movie.genres.join(', ')}`;
-                rating = `${movie.averageRating}`;
-                votes = `${movie.numVotes}`;
-                if (rating !== 'undefined') {
-                    a.textContent += ` | ${movie.averageRating}/10.0 by ${movie.numVotes} users`;
-                }
-                listItem.appendChild(a)
-
-                plot = `${movie.plot}`
-                if (plot !== 'undefined') {
-                    const paragraph = document.createElement('p');
-                    paragraph.textContent = plot
-                    listItem.appendChild(paragraph)
-                }
-                movieList.appendChild(listItem);
-            });
-            foundShowsDiv.appendChild(movieList);
-        }
+        displayMovies(movies, "foundShows");
     }
+
+
+    async function recommendShows() {
+        const title = document.getElementById('title_1').value;
+        console.log(title);
+
+        // Call FastAPI endpoint to filter movies
+        const response = await fetch(`/show/similarto/${title}`);
+        const movies = await response.json();
+
+        displayMovies(movies, "recommendedShows");
+    }
+
+
+    async function userInfo() {
+        const userId = document.getElementById('userId').value;
+        const sortby_list = document.getElementById('sortby_list').value;
+
+        // Call FastAPI endpoint to filter movies
+        const response = await fetch(`/show/user/${userId}?sortby=${sortby_list}`);
+        const movies = await response.json();
+
+        displayMovies(movies, "userRated", 5);
+    }
+
 </script>
 
 </body>

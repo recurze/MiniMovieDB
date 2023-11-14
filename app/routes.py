@@ -70,7 +70,7 @@ def find_show_by_title(title: str, request: Request):
 
 
 @show_router.get("/showsby/{name}", response_description="Get shows by person", response_model=List)
-def find_show_by_person(name: str, request: Request):
+def find_shows_by_person(name: str, request: Request):
     pipeline = [
         {
             "$match": {
@@ -104,4 +104,144 @@ def find_show_by_person(name: str, request: Request):
 
     if (shows := request.app.database["people"].aggregate(pipeline)) is not None:
         return shows
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Show with title {title} not found")
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Shows by {name} not found")
+
+
+@show_router.get("/similarto/{title}", response_description="Get recommendation based on shows", response_model=List)
+def find_shows_similar_to(title: str, request: Request):
+    pipeline = [
+        {
+            "$match": {
+                "primaryTitle": title
+            }
+        },
+        {
+            "$lookup": {
+                "from": "show_tags",
+                "localField": "_id",
+                "foreignField": "id",
+                "as": "tag_info"
+            }
+        },
+        {
+            "$lookup": {
+                "from": "show_tags",
+                "localField": "tag_info.tag",
+                "foreignField": "tag",
+                "as": "recommendation"
+            }
+        },
+        {
+            "$unwind": "$recommendation"
+        },
+        {
+            "$match": {
+                "expr": {
+                    "$ne": ["recommendation.id", "_id"]
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": "$recommendation.id",
+                "numTagMatches": {
+                    "$sum": 1
+                }
+            }
+        },
+        {
+            "$sort": {
+                "numTagMatches": -1
+            }
+        },
+        {
+            "$lookup": {
+                "from": "shows",
+                "localField": "_id",
+                "foreignField": "_id",
+                "as": "show_info"
+            }
+        },
+        {
+            "$unwind": "$show_info"
+        },
+        {
+        "$match": {
+            "expr": {
+                "$ne": ["$show_info.primaryTitle", "title"]
+                }
+            }
+        },
+        {
+            "$replaceRoot": {
+                "newRoot": "$show_info"
+            }
+        }
+    ]
+
+    if (shows := request.app.database["shows"].aggregate(pipeline)) is not None:
+        documents = [document for document in shows]
+        return documents[1: 21] if documents else []
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Show with similar tags not found")
+
+
+@show_router.get("/user/{userId}", response_description="Get user ratings", response_model=List)
+def get_user_ratings(userId: str, request: Request):
+    pipeline = [
+        {
+            "$match": {
+                "userId": int(userId)
+            }
+        },
+        {
+            "$lookup": {
+                "from": "shows",
+                "localField": "imdbId",
+                "foreignField": "_id",
+                "as": "show_info"
+            }
+        },
+        {
+            "$unwind": "$show_info"
+        },
+        {
+            "$project": {
+                "_id": "$show_info._id",
+                "primaryTitle": "$show_info.primaryTitle",
+                "genres": "$show_info.genres",
+                "startYear": "$show_info.startYear",
+                "plot": "$show_info.plot",
+                "titleType": "$show_info.titleType",
+                "averageRating": "$rating",
+                "numVotes": "1",
+                "timestamp": {
+                    "$toDate": {
+                        "$multiply": ["$timestamp", 1000]
+                    }
+                }
+            }
+        }
+    ]
+    sortby = request.query_params.get("sortby", "")
+    if sortby == "alphabetical":
+        pipeline.append({
+            "$sort": {
+                "primaryTitle": 1
+            }
+        })
+    elif sortby == "ratings":
+        pipeline.append({
+            "$sort": {
+                "averageRating": -1
+            }
+        })
+    elif sortby == "timestamp":
+        pipeline.append({
+            "$sort": {
+                "timestamp": -1
+            }
+        })
+
+    if (shows := request.app.database["user_ratings"].aggregate(pipeline)) is not None:
+        return shows
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User with userId {userId} not found")
