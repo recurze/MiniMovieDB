@@ -43,4 +43,4 @@ https://www.mongodb.com/developer/products/mongodb/mongodb-schema-design-best-pr
     - imdbId
     - eventType
     - timestamp
-    - timestampEnd (for type = playback only)
+    - playbackEndTimestamp (for type = playback only)

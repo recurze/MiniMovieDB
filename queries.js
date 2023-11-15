@@ -345,12 +345,34 @@ runQuery(function() {
         },
         {
             $group: {
-                _id: {
-                    userId: "$userId",
-                    eventType: "$eventType"
+                _id: "$userId",
+                numImpressions: {
+                    $sum: {
+                        $cond: [{
+                            $eq: ["$eventType", "impression"]
+                        }, 1.0, 0]
+                    }
                 },
-                count: {
-                    $sum: 1
+                numClicks: {
+                    $sum: {
+                        $cond: [{
+                            $eq: ["$eventType", "click"]
+                        }, 1.0, 0]
+                    }
+                },
+                numPlaybacks: {
+                    $sum: {
+                        $cond: [{
+                            $eq: ["$eventType", "playback"]
+                        }, 1, 0]
+                    }
+                },
+                shows: {
+                    $addToSet: {
+                        $cond: [{
+                            $eq: ["$eventType", "playback"]
+                        }, "$imdbId", null]
+                    }
                 },
                 watchTime: {
                     $sum: {
@@ -365,9 +387,34 @@ runQuery(function() {
         },
         {
             $group: {
-                _id: "$_id.eventType",
-                avgCount: {
-                    $avg: "$count",
+                _id: null,
+                avgNumShows: {
+                    $avg: {
+                        $size: {
+                            $setDifference: ["$shows", [null]]
+                        }
+                    }
+                },
+                avgClickThruRate: {
+                    $avg: {
+                        $cond: [{
+                            $eq: ["$numImpressions", 0]
+                        }, 0, {
+                            $divide: ["$numClicks", "$numImpressions"]
+                        }]
+                    }
+                },
+                avgWatchRate: {
+                    $avg: {
+                        $cond: [{
+                            $eq: ["$numClicks", 0]
+                        }, 0, {
+                            $divide: ["$numPlaybacks", "$numClicks"]
+                        }]
+                    }
+                },
+                avgNumPlaybacks: {
+                    $avg: "$numPlaybacks"
                 },
                 avgWatchTime: {
                     $avg: "$watchTime",
@@ -375,14 +422,19 @@ runQuery(function() {
             }
         },
         {
-            $project: {
-                avgCount: 1,
+            $addFields: {
                 avgWatchTimeInMinutes: {
                     $divide: ["$avgWatchTime", 60]
                 },
             }
         },
-    ]).toArray()
+        {
+            $project: {
+                _id: 0,
+                avgWatchTime: 0
+            }
+        }
+    ]).toArray();
 }, "9. Compute aggregate metrics in the week of 2010-01-01", "aggregate");
 
 

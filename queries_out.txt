@@ -401,41 +401,23 @@ Time: 16063ms, #results: 1
 
 MiniMovieDB> 
 MiniMovieDB> 
-MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... [
+MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
+MiniMovieDB> 
+MiniMovieDB> 
+MiniMovieDB> ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... [
   {
-    _id: 'view',
-    avgCount: 4.882117080994386,
-    avgWatchTimeInMinutes: 0
-  },
-  {
-    _id: 'tag',
-    avgCount: 14.810126582278482,
-    avgWatchTimeInMinutes: 0
-  },
-  {
-    _id: 'playback',
-    avgCount: 4.058186738836265,
-    avgWatchTimeInMinutes: 90.27850699142986
-  },
-  {
-    _id: 'rate',
-    avgCount: 18.924564796905223,
-    avgWatchTimeInMinutes: 0
-  },
-  {
-    _id: 'click',
-    avgCount: 5.703054298642534,
-    avgWatchTimeInMinutes: 0
-  },
-  {
-    _id: 'impression',
-    avgCount: 6.891376846117199,
-    avgWatchTimeInMinutes: 0
+    _id: null,
+    avgNumShows: 0.9937044400265076,
+    avgClickThruRate: 0.3943044185203353,
+    avgWatchRate: 0.08236195453251925,
+    avgNumPlaybacks: 0.9937044400265076,
+    avgWatchTimeInMinutes: 22.105969737132757
   }
 ]
 
 Query 9. Compute aggregate metrics in the week of 2010-01-01
-Time: 34319ms, #results: 6
+Time: 37600ms, #results: 1
+
 
 MiniMovieDB> 
 MiniMovieDB> 
