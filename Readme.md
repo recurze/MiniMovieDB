@@ -44,4 +44,4 @@ See `natural_language_queries.txt` for list of queries. Run `mongosh < queries.j
 
 ## FrontEnd
 
-Written using [FastAPI](https://fastapi.tiangolo.com/) and some javascript.
+Written using [FastAPI](https://fastapi.tiangolo.com/) and some javascript. See `img/` for screenshots.
